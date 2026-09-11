@@ -905,8 +905,13 @@ function render() {
   renderYearTable(curMon);
 }
 
-/* Chart.js is loaded synchronously above; DOM is ready at this point */
-render();
+/* Ensure Chart.js and DOM are both ready */
+if (typeof Chart !== 'undefined') {
+  render();
+} else {
+  document.querySelector('script[src*="chart"]').addEventListener('load', render);
+  window.addEventListener('load', render);
+}
 </script>
 </body>
 </html>
