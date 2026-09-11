@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SABU 売上ダッシュボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.7/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<style>
+/* ── Reset & tokens ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --c-bg:        #EEF2F7;
+  --c-surface:   #FFFFFF;
+  --c-sidebar:   #1B2D42;
+  --c-sidebar-text: rgba(255,255,255,0.68);
+  --c-sidebar-active-text: #FFFFFF;
+  --c-border:    #DDE3ED;
+  --c-text-primary:   #111827;
+  --c-text-secondary: #6B7280;
+  --c-text-muted:     #9CA3AF;
+
+  --c-teal:   #0CA7A0;
+  --c-purple: #7C5FAD;
+  --c-blue:   #3B82F6;
+  --c-green:  #10B981;
+  --c-red:    #F43F5E;
+  --c-green-bg: rgba(16,185,129,0.1);
+  --c-red-bg:   rgba(244,63,94,0.1);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+
+  --sidebar-w: 168px;
+  --font-jp:  'Noto Sans JP', sans-serif;
+  --font-num: 'Inter', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-bg:        #0D1521;
+    --c-surface:   #152030;
+    --c-border:    #1E3048;
+    --c-text-primary:   #E8EDF5;
+    --c-text-secondary: #7A8FA8;
+    --c-text-muted:     #4A6180;
+    --c-green-bg: rgba(16,185,129,0.15);
+    --c-red-bg:   rgba(244,63,94,0.15);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+  }
+}
+:root[data-theme="dark"] {
+  --c-bg:        #0D1521;
+  --c-surface:   #152030;
+  --c-border:    #1E3048;
+  --c-text-primary:   #E8EDF5;
+  --c-text-secondary: #7A8FA8;
+  --c-text-muted:     #4A6180;
+  --c-green-bg: rgba(16,185,129,0.15);
+  --c-red-bg:   rgba(244,63,94,0.15);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+body {
+  font-family: var(--font-jp);
+  font-size: 13px;
+  background: var(--c-bg);
+  color: var(--c-text-primary);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--c-sidebar);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 20;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo .co-name {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+.sidebar-logo .co-label {
+  font-size: 10px;
+  color: var(--c-sidebar-text);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+.sidebar-period {
+  padding: 10px 18px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 11px;
+  color: var(--c-sidebar-text);
+  line-height: 1.6;
+}
+.sidebar-period strong {
+  display: block;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 3px;
+  font-family: var(--font-num);
+}
+.sidebar-nav { flex: 1; padding: 12px 0; }
+.nav-section {
+  padding: 12px 18px 4px;
+  font-size: 9.5px;
+  font-family: var(--font-num);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 18px;
+  font-size: 12.5px;
+  color: var(--c-sidebar-text);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.12s, color 0.12s;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active {
+  background: rgba(255,255,255,0.11);
+  color: var(--c-sidebar-active-text);
+  border-left-color: var(--c-teal);
+  font-weight: 500;
+}
+.nav-icon { font-size: 14px; }
+.sidebar-footer {
+  padding: 12px 18px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 10px;
+  color: rgba(255,255,255,0.28);
+  line-height: 1.65;
+  font-family: var(--font-num);
+}
+
+/* ── Main ── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.topbar {
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+  padding: 0 24px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+}
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ctrl-label {
+  font-size: 11px;
+  color: var(--c-text-secondary);
+  white-space: nowrap;
+}
+select.ctrl-select {
+  font-family: var(--font-jp);
+  font-size: 12px;
+  background: var(--c-bg);
+  color: var(--c-text-primary);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 5px 28px 5px 10px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  min-width: 128px;
+}
+select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px; }
+
+.theme-btn {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 5px 9px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: background 0.12s;
+}
+.theme-btn:hover { background: var(--c-border); }
+
+/* ── Content ── */
+.content {
+  padding: 18px 24px 36px;
+  flex: 1;
+}
+
+/* ── KPI row ── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.kpi-card {
+  background: var(--c-surface);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border);
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi-card.t-teal::before   { background: var(--c-teal); }
+.kpi-card.t-purple::before { background: var(--c-purple); }
+.kpi-card.t-blue::before   { background: var(--c-blue); }
+
+.kpi-eyebrow {
+  font-size: 9.5px;
+  font-family: var(--font-num);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 5px;
+}
+.kpi-label {
+  font-size: 11.5px;
+  color: var(--c-text-secondary);
+  margin-bottom: 7px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.kpi-value {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.kpi-unit { font-size: 12px; font-weight: 400; color: var(--c-text-secondary); margin-left: 2px; }
+.kpi-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-num);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 100px;
+}
+.badge.up   { background: var(--c-green-bg); color: var(--c-green); }
+.badge.down { background: var(--c-red-bg);   color: var(--c-red); }
+.kpi-sub { font-size: 10.5px; color: var(--c-text-muted); font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* ── Bottom grid ── */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 370px;
+  gap: 14px;
+  align-items: start;
+}
+.left-col  { display: flex; flex-direction: column; gap: 14px; }
+.right-col { display: flex; flex-direction: column; gap: 14px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--c-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
+}
+.card-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.card-title { font-size: 13px; font-weight: 700; color: var(--c-text-primary); }
+.card-sub   { font-size: 10.5px; color: var(--c-text-muted); font-family: var(--font-num); }
+
+/* Chart legend */
+.chart-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.legend-item  { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--c-text-secondary); font-family: var(--font-num); }
+.l-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.l-line { width: 18px; height: 2px; border-radius: 1px; flex-shrink: 0; background: var(--c-blue); position: relative; }
+.l-line::before { content: ''; position: absolute; width: 5px; height: 5px; border-radius: 50%; top: -1.5px; left: 6px; background: var(--c-blue); }
+
+/* Chart canvas wrapper */
+.chart-wrap { position: relative; height: 240px; }
+
+/* ── Donut ── */
+.donut-inner { display: flex; align-items: center; gap: 16px; }
+.donut-wrap  { position: relative; width: 130px; height: 130px; flex-shrink: 0; }
+.donut-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  width: 70px;
+}
+.dc-label { font-size: 9px; color: var(--c-text-muted); line-height: 1.4; }
+.dc-value { font-family: var(--font-num); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--c-text-primary); }
+
+.donut-legend      { flex: 1; }
+.donut-legend-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--c-border); }
+.donut-legend-item:last-child { border-bottom: none; }
+.dl-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.dl-name   { flex: 1; font-size: 11.5px; color: var(--c-text-secondary); }
+.dl-pct    { font-family: var(--font-num); font-size: 12px; font-weight: 600; color: var(--c-text-primary); }
+.dl-amt    { font-family: var(--font-num); font-size: 10px; color: var(--c-text-muted); font-variant-numeric: tabular-nums; }
+
+/* ── Breakdown tabs ── */
+.breakdown-tabs { display: flex; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; }
+.btab {
+  padding: 6px 13px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color 0.12s;
+}
+.btab:hover { color: var(--c-text-primary); }
+.btab.at { color: var(--c-teal);   border-bottom-color: var(--c-teal);   font-weight: 700; }
+.btab.ap { color: var(--c-purple); border-bottom-color: var(--c-purple); font-weight: 700; }
+
+/* ── Breakdown table ── */
+.bk-table { width: 100%; border-collapse: collapse; }
+.bk-table th {
+  font-size: 9.5px; font-family: var(--font-num); font-weight: 600;
+  letter-spacing: 0.04em; color: var(--c-text-muted); text-transform: uppercase;
+  padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--c-border);
+}
+.bk-table th:first-child { text-align: left; }
+.bk-table td {
+  font-size: 12px; padding: 6px 6px; border-bottom: 1px solid var(--c-border);
+  color: var(--c-text-primary); font-family: var(--font-num); font-variant-numeric: tabular-nums; text-align: right;
+}
+.bk-table td:first-child { text-align: left; font-family: var(--font-jp); color: var(--c-text-secondary); font-size: 11.5px; }
+.bk-table tbody tr:last-child td { border-bottom: none; font-weight: 700; }
+.bk-pct { color: var(--c-text-muted); font-size: 10.5px; }
+
+/* ── Year table ── */
+.year-table-wrap { overflow-x: auto; }
+.year-table { width: 100%; border-collapse: collapse; min-width: 680px; }
+.year-table th {
+  font-size: 9.5px; font-family: var(--font-num); font-weight: 600;
+  letter-spacing: 0.04em; color: var(--c-text-muted); text-transform: uppercase;
+  padding: 4px 8px; text-align: right; border-bottom: 2px solid var(--c-border); white-space: nowrap;
+}
+.year-table th:first-child { text-align: left; min-width: 110px; }
+.year-table td {
+  font-size: 11.5px; padding: 5px 8px; border-bottom: 1px solid var(--c-border);
+  color: var(--c-text-primary); font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  text-align: right; white-space: nowrap;
+}
+.year-table td:first-child { text-align: left; font-family: var(--font-jp); color: var(--c-text-secondary); font-size: 11.5px; }
+.year-table .r-bdg td { color: var(--c-text-muted); font-size: 10.5px; }
+.year-table .r-act td { font-weight: 600; }
+.year-table .r-dif td { font-size: 10.5px; }
+.year-table .r-sub td { color: var(--c-text-secondary); font-size: 10.5px; }
+.year-table .sep td   { height: 4px; border: none; background: var(--c-bg); padding: 0; }
+.year-table .c-cur    { background: rgba(12,167,160,0.05) !important; border-left: 2px solid var(--c-teal); border-right: 2px solid var(--c-teal); }
+.pos { color: var(--c-green); }
+.neg { color: var(--c-red); }
+.muted-cell { color: var(--c-text-muted) !important; }
+
+/* ── Updated footer note ── */
+.updated { margin-top: 10px; font-size: 10px; color: var(--c-text-muted); font-family: var(--font-num); text-align: right; }
+
+/* ── Responsive ── */
+@media (max-width: 1180px) {
+  .bottom-grid { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 780px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .kpi-row { grid-template-columns: 1fr; }
+  .content { padding: 14px 14px 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="co-name">SABU</div>
+    <div class="co-label">Sales Dashboard</div>
+  </div>
+  <div class="sidebar-period">
+    <strong>期</strong>
+    第8期（2026.8 – 2027.7）
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">分析</div>
+    <div class="nav-item active"><span class="nav-icon">📊</span>売上サマリー</div>
+    <div class="nav-item"><span class="nav-icon">📈</span>月次推移</div>
+    <div class="nav-section">事業別</div>
+    <div class="nav-item"><span class="nav-icon">🏢</span>BPO事業</div>
+    <div class="nav-item"><span class="nav-icon">🚀</span>新規事業</div>
+  </nav>
+  <div class="sidebar-footer">
+    データソース<br>
+    Google スプレッドシート<br>
+    【8期】売上推移表
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-title">売上サマリー</div>
+    <div class="topbar-controls">
+      <span class="ctrl-label">表示月</span>
+      <select class="ctrl-select" id="monthSel"></select>
+      <button class="theme-btn" id="themeBtn">🌙</button>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- KPI -->
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <!-- Bottom grid -->
+    <div class="bottom-grid">
+      <!-- Left -->
+      <div class="left-col">
+        <div class="card">
+          <div class="card-hd">
+            <div>
+              <div class="card-title">月次売上推移（純売上高）</div>
+              <div class="card-sub">単位：万円　／　第8期 2026年8月〜2027年7月</div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="l-dot" style="background:#0CA7A0"></div>実績</div>
+              <div class="legend-item"><div class="l-dot" style="background:rgba(12,167,160,0.4)"></div>着地見込</div>
+              <div class="legend-item"><div class="l-line"></div>予算</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">全社売上 月次サマリー</div>
+            <div class="card-sub">単位：万円</div>
+          </div>
+          <div class="year-table-wrap">
+            <table class="year-table" id="yearTable"></table>
+          </div>
+          <div class="updated" id="updatedNote"></div>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="right-col">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">売上内訳（当月）</div></div>
+          <div class="donut-inner">
+            <div class="donut-wrap">
+              <canvas id="donutChart"></canvas>
+              <div class="donut-center" id="donutCenter"></div>
+            </div>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="breakdown-tabs">
+            <div class="btab at" id="tabM" onclick="switchTab('monthly')">月額サービス</div>
+            <div class="btab"    id="tabS" onclick="switchTab('spot')">単発・有期</div>
+          </div>
+          <div id="bkContent"></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /content -->
+</main>
+
+<!-- ══════════════════════════════════════════════════
+     DATA — 第8期 (2026年8月〜2027年7月)
+     Source: Google スプレッドシート【8期】売上推移表
+     Last sync: 2026/09/11
+══════════════════════════════════════════════════ -->
+<script>
+/* ── 月ラベル ── */
+const SHORT_M = ['8月','9月','10月','11月','12月','1月','2月','3月','4月','5月','6月','7月'];
+const LONG_M  = ['2026年8月','2026年9月','2026年10月','2026年11月','2026年12月',
+                 '2027年1月','2027年2月','2027年3月','2027年4月','2027年5月','2027年6月','2027年7月'];
+
+/* ── 純売上高 ── */
+const netBdg  = [36415591,34027905,50206423,36769942,38769942,40049942,40204942,40444942,56484942,42124942,42764942,43404942];
+const netAct  = [38088088,34643000,33443000,33343000,34193000,31993000,28498000,26898000,25948000,25948000,25848000,25848000];
+
+/* ── BPO事業 ── */
+const bpoBdg  = [29935591,28747905,28551423,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942];
+const bpoAct  = [31489038,27113000,23848000,23848000,23998000,23848000,23803000,23803000,23753000,23753000,23653000,23653000];
+
+/* ── 新規事業 ── */
+const newBdg  = [6480000,5280000,21655000,8415000,10415000,11695000,11850000,12090000,28130000,13770000,14410000,15050000];
+const newAct  = [6870000,7530000,9595000,9495000,10195000,8145000,4695000,3095000,2195000,2195000,2195000,2195000];
+
+/* ── 月額サービス内訳 ── */
+const bpoMon  = [26168000,24923000,23448000,23448000,23448000,23448000,23403000,23403000,23353000,23353000,23353000,23353000];
+const cliMgmt = [665000,645000,610000,600000,600000,600000,600000,590000,590000,590000,590000,590000];
+const cxbCont = [240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000];
+
+/* ── 単発・有期内訳 ── */
+const bpoUp   = [910000,0,0,0,0,0,0,0,0,0,0,0];
+const bpoSpt  = [4411038,2190000,400000,400000,550000,400000,400000,400000,400000,400000,300000,300000];
+const cxbPrj  = [900000,3200000,5150000,5150000,6350000,4300000,1700000,900000,0,0,0,0];
+const othNew  = [5065000,3445000,3595000,3505000,3005000,3005000,2155000,1365000,1365000,1365000,1365000,1365000];
+
+/* ── 確定実績の月数（0-indexed: 0=Aug2026が確定） ── */
+const ACTUAL_COUNT = 1;
+
+/* ══════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════ */
+const man    = v  => Math.round(v / 10000);
+const fmt    = v  => Math.abs(v).toLocaleString('ja-JP');
+const fmtPct = p  => (p >= 0 ? '+' : '') + p.toFixed(1) + '%';
+const pctOf  = (a,b) => b ? (a - b) / b * 100 : 0;
+const isAct  = i  => i < ACTUAL_COUNT;
+const monSum = i  => bpoMon[i] + cliMgmt[i] + cxbCont[i];
+const sptSum = i  => bpoUp[i]  + bpoSpt[i]  + cxbPrj[i] + othNew[i];
+
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+let curMon = 0;
+let curTab = 'monthly';
+let barCI  = null;
+let donCI  = null;
+
+/* ══════════════════════════════════════════════════
+   MONTH SELECT
+══════════════════════════════════════════════════ */
+const sel = document.getElementById('monthSel');
+LONG_M.forEach((m, i) => {
+  const o = document.createElement('option');
+  o.value = i; o.textContent = m;
+  sel.appendChild(o);
+});
+sel.value = curMon;
+sel.addEventListener('change', () => { curMon = +sel.value; render(); });
+
+/* ══════════════════════════════════════════════════
+   KPI CARDS
+══════════════════════════════════════════════════ */
+function renderKPI(i) {
+  const act  = netAct[i],  bdg  = netBdg[i];
+  const bAct = bpoAct[i],  bBdg = bpoBdg[i];
+  const nAct = newAct[i],  nBdg = newBdg[i];
+  const mon  = monSum(i);
+  const spt  = sptSum(i);
+  const total = act;
+
+  const cards = [
+    { ey:'NET SALES', lbl:'当月売上（着地見込）', val:man(act),  unit:'万円', ratio:pctOf(act,bdg),  sub:`予算 ${fmt(man(bdg))}万円`,       t:'t-teal' },
+    { ey:'BPO',       lbl:'BPO事業 売上',         val:man(bAct), unit:'万円', ratio:pctOf(bAct,bBdg),sub:`予算 ${fmt(man(bBdg))}万円`,      t:'t-teal' },
+    { ey:'NEW BIZ',   lbl:'新規事業 売上',         val:man(nAct), unit:'万円', ratio:pctOf(nAct,nBdg),sub:`予算 ${fmt(man(nBdg))}万円`,      t:'t-purple' },
+    { ey:'MONTHLY',   lbl:'月額サービス売上',       val:man(mon),  unit:'万円', ratio:(total?mon/total*100:0)-50, isShare:true, rawP:total?mon/total*100:0, sub:`売上高の ${total?(mon/total*100).toFixed(1):0}%`, t:'t-teal' },
+    { ey:'SPOT',      lbl:'単発・有期 売上',        val:man(spt),  unit:'万円', ratio:(total?spt/total*100:0)-50, isShare:true, rawP:total?spt/total*100:0, sub:`売上高の ${total?(spt/total*100).toFixed(1):0}%`, t:'t-purple' },
+  ];
+
+  document.getElementById('kpiRow').innerHTML = cards.map(c => {
+    const up  = c.isShare ? c.rawP >= 50 : c.ratio >= 0;
+    const cls = up ? 'up' : 'down';
+    const arrow = up ? '▲' : '▼';
+    const ps  = c.isShare ? c.rawP.toFixed(1) + '%' : fmtPct(c.ratio);
+    const lbl = c.isShare ? '売上比' : '予算比';
+    return `<div class="kpi-card ${c.t}">
+      <div class="kpi-eyebrow">${c.ey}</div>
+      <div class="kpi-label">${c.lbl}</div>
+      <div class="kpi-value">${fmt(c.val)}<span class="kpi-unit">${c.unit}</span></div>
+      <div class="kpi-meta">
+        <span class="badge ${cls}">${arrow} ${ps} ${lbl}</span>
+        <span class="kpi-sub">${c.sub}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   BAR + LINE CHART
+   実績=濃いティール / 着地見込み=薄いティール / 選択月=枠線
+══════════════════════════════════════════════════ */
+function renderBar(selIdx) {
+  const dark = getDark();
+  const grid = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick = dark ? '#7A8FA8' : '#6B7280';
+  const surf = dark ? '#152030' : '#FFFFFF';
+
+  const barBg = SHORT_M.map((_, i) => {
+    if (isAct(i)) return '#0CA7A0';
+    return dark ? 'rgba(12,167,160,0.35)' : 'rgba(12,167,160,0.42)';
+  });
+  const barBd = SHORT_M.map((_, i) =>
+    i === selIdx ? (isAct(i) ? '#088880' : 'rgba(12,167,160,0.8)') : 'transparent'
+  );
+
+  const data = {
+    labels: SHORT_M,
+    datasets: [
+      {
+        type: 'bar',
+        label: '実績・着地見込',
+        data: netAct.map(v => man(v)),
+        backgroundColor: barBg,
+        borderColor: barBd,
+        borderWidth: 2,
+        borderRadius: 4,
+        borderSkipped: 'bottom',
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: '予算',
+        data: netBdg.map(v => man(v)),
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59,130,246,0.06)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#3B82F6',
+        pointBorderColor: surf,
+        pointBorderWidth: 1.5,
+        tension: 0.3,
+        order: 1,
+      }
+    ]
+  };
+
+  const opts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: dark ? '#1E3048' : '#1B2D42',
+        titleColor: '#fff',
+        bodyColor: 'rgba(255,255,255,0.75)',
+        padding: 10,
+        cornerRadius: 6,
+        callbacks: {
+          title: items => LONG_M[items[0].dataIndex] + (isAct(items[0].dataIndex) ? '（実績）' : '（着地見込）'),
+          label: c => ` ${c.dataset.label}：${fmt(c.raw)} 万円`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: grid }, ticks: { color: tick, font: { family: 'Inter', size: 11 } } },
+      y: { grid: { color: grid }, ticks: { color: tick, font: { family: 'Inter', size: 10 }, callback: v => fmt(v) } }
+    }
+  };
+
+  const ctx = document.getElementById('barChart').getContext('2d');
+  if (barCI) { barCI.data = data; barCI.options = opts; barCI.update(); }
+  else barCI = new Chart(ctx, { type: 'bar', data, options: opts });
+}
+
+/* ══════════════════════════════════════════════════
+   DONUT CHART
+══════════════════════════════════════════════════ */
+function renderDonut(i) {
+  const mon   = monSum(i);
+  const spt   = sptSum(i);
+  const total = mon + spt;
+  const dark  = getDark();
+  const surf  = dark ? '#152030' : '#FFFFFF';
+
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  const data = {
+    labels: ['月額サービス', '単発・有期'],
+    datasets: [{
+      data: [mon, spt],
+      backgroundColor: ['#0CA7A0', '#7C5FAD'],
+      borderColor: surf,
+      borderWidth: 2,
+      borderRadius: 3,
+    }]
+  };
+  const opts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '67%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: dark ? '#1E3048' : '#1B2D42',
+        titleColor: '#fff',
+        bodyColor: 'rgba(255,255,255,0.75)',
+        padding: 8,
+        cornerRadius: 6,
+        callbacks: { label: c => ` ${c.label}：${fmt(man(c.raw))} 万円` }
+      }
+    }
+  };
+
+  if (donCI) { donCI.data = data; donCI.options = opts; donCI.update(); }
+  else donCI = new Chart(ctx, { type: 'doughnut', data, options: opts });
+
+  // Center
+  document.getElementById('donutCenter').innerHTML =
+    `<div class="dc-label">合計<br>（万円）</div><div class="dc-value">${fmt(man(total))}</div>`;
+
+  // Legend
+  const items = [
+    { lbl: '月額サービス', c: '#0CA7A0', v: mon },
+    { lbl: '単発・有期',   c: '#7C5FAD', v: spt }
+  ];
+  document.getElementById('donutLegend').innerHTML = items.map(it => {
+    const p = total ? (it.v / total * 100) : 0;
+    return `<div class="donut-legend-item">
+      <div class="dl-swatch" style="background:${it.c}"></div>
+      <div class="dl-name">${it.lbl}</div>
+      <div><div class="dl-pct">${p.toFixed(1)}%</div><div class="dl-amt">${fmt(man(it.v))}万</div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   BREAKDOWN TABLE
+══════════════════════════════════════════════════ */
+function renderBreakdown(i) {
+  const total = netAct[i];
+  const monRows = [
+    { n: 'BPO月額',      v: bpoMon[i] },
+    { n: 'クリニック管理', v: cliMgmt[i] },
+    { n: 'CXB継続支援',   v: cxbCont[i] }
+  ];
+  const sptRows = [
+    { n: 'BPO初期費用',     v: bpoUp[i] },
+    { n: 'BPO単発・有期',   v: bpoSpt[i] },
+    { n: 'CXB本支援',       v: cxbPrj[i] },
+    { n: 'その他新規事業',  v: othNew[i] }
+  ];
+
+  function tbl(rows) {
+    const sub = rows.reduce((s, r) => s + r.v, 0);
+    const rh = rows.map(r => {
+      const p = total ? (r.v / total * 100) : 0;
+      return `<tr><td>${r.n}</td><td>${fmt(man(r.v))}</td><td class="bk-pct">${p.toFixed(1)}%</td></tr>`;
+    }).join('');
+    const sp = total ? (sub / total * 100) : 0;
+    return `<table class="bk-table">
+      <thead><tr><th>区分</th><th>金額（万円）</th><th>構成比</th></tr></thead>
+      <tbody>${rh}
+        <tr><td>合計</td><td>${fmt(man(sub))}</td><td class="bk-pct">${sp.toFixed(1)}%</td></tr>
+      </tbody></table>`;
+  }
+
+  const tabM = document.getElementById('tabM');
+  const tabS = document.getElementById('tabS');
+  if (curTab === 'monthly') {
+    tabM.className = 'btab at'; tabS.className = 'btab';
+    document.getElementById('bkContent').innerHTML = tbl(monRows);
+  } else {
+    tabM.className = 'btab';   tabS.className = 'btab ap';
+    document.getElementById('bkContent').innerHTML = tbl(sptRows);
+  }
+}
+window.switchTab = t => { curTab = t; renderBreakdown(curMon); };
+
+/* ══════════════════════════════════════════════════
+   YEAR TABLE
+══════════════════════════════════════════════════ */
+function renderYearTable(selIdx) {
+  const mkCells = (fn, cls) => SHORT_M.map((_, i) => {
+    const v   = fn(i);
+    const cur = i === selIdx ? ' c-cur' : '';
+    return `<td class="${cls}${cur}">${v}</td>`;
+  }).join('');
+
+  const diffCells = SHORT_M.map((_, i) => {
+    const d   = man(netAct[i]) - man(netBdg[i]);
+    const cur = i === selIdx ? ' c-cur' : '';
+    const dc  = d >= 0 ? 'pos' : 'neg';
+    return `<td class="${dc}${cur}">${d >= 0 ? '+' : ''}${fmt(Math.abs(d))}</td>`;
+  }).join('');
+
+  const thead = `<thead><tr><th></th>${SHORT_M.map((m,i) =>
+    `<th class="${i===selIdx?'c-cur':''}">${isAct(i)?m:`<span class="muted-cell">${m}</span>`}</th>`
+  ).join('')}</tr></thead>`;
+
+  const rows = [
+    { lbl:'予算',         fn: i => fmt(man(netBdg[i])),  cls:'r-bdg' },
+    { lbl:'実績・着地見込', fn: i => {
+        const s = isAct(i) ? '' : ' muted-cell';
+        return `<span class="${s.trim()}">${fmt(man(netAct[i]))}</span>`;
+      }, cls:'r-act', html:true },
+    { lbl:'予実差',       special:'diff',               cls:'r-dif' },
+    null, // separator
+    { lbl:'BPO事業',     fn: i => fmt(man(bpoAct[i])),  cls:'r-sub' },
+    { lbl:'新規事業',    fn: i => fmt(man(newAct[i])),  cls:'r-sub' },
+    { lbl:'月額サービス', fn: i => fmt(man(monSum(i))),  cls:'r-sub' },
+    { lbl:'単発・有期',   fn: i => fmt(man(sptSum(i))),  cls:'r-sub' },
+  ];
+
+  const tbody = '<tbody>' + rows.map(r => {
+    if (!r) return `<tr class="sep"><td colspan="${SHORT_M.length + 1}"></td></tr>`;
+    if (r.special === 'diff') {
+      return `<tr class="${r.cls}"><td>予実差</td>${diffCells}</tr>`;
+    }
+    if (r.html) {
+      const cells = SHORT_M.map((_, i) => {
+        const cur = i === selIdx ? ' c-cur' : '';
+        return `<td class="${cur}">${r.fn(i)}</td>`;
+      }).join('');
+      return `<tr class="${r.cls}"><td>${r.lbl}</td>${cells}</tr>`;
+    }
+    return `<tr class="${r.cls}"><td>${r.lbl}</td>${mkCells(r.fn, '')}</tr>`;
+  }).join('') + '</tbody>';
+
+  document.getElementById('yearTable').innerHTML = thead + tbody;
+  document.getElementById('updatedNote').textContent = '※ グラフ・表ともに着地見込ベース　最終更新 2026/09/11';
+}
+
+/* ══════════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════════ */
+function getDark() {
+  const t = document.documentElement.getAttribute('data-theme');
+  return t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const t = root.getAttribute('data-theme');
+  if (!t) root.setAttribute('data-theme', getDark() ? 'light' : 'dark');
+  else if (t === 'dark') root.setAttribute('data-theme', 'light');
+  else root.setAttribute('data-theme', 'dark');
+  document.getElementById('themeBtn').textContent = getDark() ? '☀️' : '🌙';
+  // rebuild charts with new theme colors
+  if (barCI) { barCI.destroy(); barCI = null; }
+  if (donCI) { donCI.destroy(); donCI = null; }
+  render();
+});
+
+/* ══════════════════════════════════════════════════
+   RENDER ALL
+══════════════════════════════════════════════════ */
+function render() {
+  renderKPI(curMon);
+  renderBar(curMon);
+  renderDonut(curMon);
+  renderBreakdown(curMon);
+  renderYearTable(curMon);
+}
+
+/* Chart.js is loaded synchronously above; DOM is ready at this point */
+render();
+</script>
+</body>
+</html>
