@@ -1001,31 +1001,53 @@ const CHURN_RECORDS_FALLBACK = [
 const SHEET_ID   = '1X_MtSbuMqDSkdZKYOmffHWHa1wUmGPD-Fr8zXMZ3yhM';
 const MRR_GID    = '38936773';
 
-/* JSONP でスプレッドシートを取得（CORSを回避、ローカル開発時も動作）
+/* google.visualization.Query.setResponse インターセプター（gviz新形式対応）
+   gviz/tq API は callback パラメータを無視し、常に
+   google.visualization.Query.setResponse(data) を呼び出す。
+   reqId で並列リクエストを識別する。 */
+window._gvizPending = window._gvizPending || new Map();
+window.google = window.google || {
+  visualization: {
+    Query: {
+      setResponse: function(data) {
+        const reqId = data && data.reqId;
+        const entry = window._gvizPending.get(String(reqId));
+        if (entry) {
+          window._gvizPending.delete(String(reqId));
+          entry.resolve(data);
+        }
+      }
+    }
+  }
+};
+
+/* gviz JSONP でスプレッドシートを取得（CORSを回避、ローカル開発時も動作）
    gidOrSheet: GID 文字列 or シート名（useSheet=true のとき）
    range:      A1 記法の範囲文字列 */
 function fetchGvizJSONP(gidOrSheet, range, useSheet) {
   return new Promise((resolve, reject) => {
-    const cbName = '_gviz_' + Math.random().toString(36).slice(2);
+    const reqId = Math.random().toString(36).slice(2);
     const sheetParam = useSheet
       ? `&sheet=${encodeURIComponent(gidOrSheet)}`
       : `&gid=${gidOrSheet}`;
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
-              + `?tqx=out:json;callback:${cbName}${sheetParam}&range=${encodeURIComponent(range)}`;
+              + `?tqx=out:json;reqId:${reqId}${sheetParam}&range=${encodeURIComponent(range)}`;
 
-    let timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 8000);
-
+    let script;
     function cleanup() {
-      clearTimeout(timer);
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
+      window._gvizPending.delete(reqId);
+      if (script && script.parentNode) script.parentNode.removeChild(script);
     }
 
-    window[cbName] = function(data) { cleanup(); resolve(data); };
+    const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
 
-    const script = document.createElement('script');
+    window._gvizPending.set(reqId, {
+      resolve: function(data) { clearTimeout(timer); cleanup(); resolve(data); }
+    });
+
+    script = document.createElement('script');
     script.src = url;
-    script.onerror = () => { cleanup(); reject(new Error('Script load failed')); };
+    script.onerror = () => { clearTimeout(timer); cleanup(); reject(new Error('Script load failed')); };
     document.head.appendChild(script);
   });
 }
