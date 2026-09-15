@@ -1891,80 +1891,49 @@ async function initFetch() {
   setSync('同期中…');
 
   try {
-    const [
-      t_bpoMon,    // 予実管理表 row 6
-      t_bpoUp,     // 予実管理表 row 24
-      t_bpoSpt,    // 予実管理表 row 27
-      t_bpoPair,   // 予実管理表 rows 29-30: bpoBdg(0), bpoAct(1)
-      t_cliMgmt,   // 予実管理表 row 34
-      t_cxbCont,   // 予実管理表 row 37
-      t_cxbPair,   // 予実管理表 rows 40-41: cxbPrj合計
-      t_newPair,   // 予実管理表 rows 47-48: newBdg(0), newAct(1)
-      t_netPair,   // 予実管理表 rows 52-53: netBdg(0), netAct(1)
-      t_gpPair,    // 予実管理表 rows 69-70: gpBdg(0), gpAct(1)
-      t_opPair,    // 予実管理表 rows 72-73: opBdg(0), opAct(1)
-      t_keiei,     // plan別売上 row 90
-      t_mediaPair, // plan別売上 rows 92-93: media合計
-      t_bkstage,   // plan別売上 row 94
-      t_mrrTop,    // MRR rows 3-6: newMrr/Cnt, existMrr/Cnt
-      t_churn,     // MRR rows 11-13: churnMrr, churnCnt, ckyakuCnt
-      t_churnRate, // MRR row 15: churnRatePct
-    ] = await Promise.all([
-      fetchSheet(SHEET_YOJI, 'A6:AC6'),
-      fetchSheet(SHEET_YOJI, 'A24:AC24'),
-      fetchSheet(SHEET_YOJI, 'A27:AC27'),
-      fetchSheet(SHEET_YOJI, 'A29:AC30'),
-      fetchSheet(SHEET_YOJI, 'A34:AC34'),
-      fetchSheet(SHEET_YOJI, 'A37:AC37'),
-      fetchSheet(SHEET_YOJI, 'A40:AC41'),
-      fetchSheet(SHEET_YOJI, 'A47:AC48'),
-      fetchSheet(SHEET_YOJI, 'A52:AC53'),
-      fetchSheet(SHEET_YOJI, 'A69:AC70'),
-      fetchSheet(SHEET_YOJI, 'A72:AC73'),
-      fetchSheet(SHEET_PLAN, 'A90:AW90'),
-      fetchSheet(SHEET_PLAN, 'A92:AW93'),
-      fetchSheet(SHEET_PLAN, 'A94:AW94'),
-      fetchSheet(SHEET_MRR,  'A3:M6'),
-      fetchSheet(SHEET_MRR,  'A11:M13'),
-      fetchSheet(SHEET_MRR,  'A15:M15'),
+    // シートごとに1リクエストにまとめて 17→3回 に削減（レートリミット対策）
+    const [yoji, plan, mrr] = await Promise.all([
+      fetchSheet(SHEET_YOJI, 'A6:AC73'),   // rows 6-73  → インデックス = 行番号 - 6
+      fetchSheet(SHEET_PLAN, 'A90:AW94'),  // rows 90-94 → インデックス = 行番号 - 90
+      fetchSheet(SHEET_MRR,  'A3:M15'),    // rows 3-15  → インデックス = 行番号 - 3
     ]);
 
-    // ── 予実管理表 ──
-    bpoMon.splice( 0,12,...extract12(t_bpoMon,   0, yAct));
-    bpoUp.splice(  0,12,...extract12(t_bpoUp,    0, yAct));
-    bpoSpt.splice( 0,12,...extract12(t_bpoSpt,   0, yAct));
-    bpoBdg.splice( 0,12,...extract12(t_bpoPair,  0, yBdg));
-    bpoAct.splice( 0,12,...extract12(t_bpoPair,  1, yAct));
-    cliMgmt.splice(0,12,...extract12(t_cliMgmt,  0, yAct));
-    cxbCont.splice(0,12,...extract12(t_cxbCont,  0, yAct));
+    // ── 予実管理表 (インデックス = スプレッドシート行 - 6) ──
+    bpoMon.splice( 0,12,...extract12(yoji, 0,  yAct));   // row 6
+    bpoUp.splice(  0,12,...extract12(yoji, 18, yAct));   // row 24
+    bpoSpt.splice( 0,12,...extract12(yoji, 21, yAct));   // row 27
+    bpoBdg.splice( 0,12,...extract12(yoji, 23, yBdg));   // row 29
+    bpoAct.splice( 0,12,...extract12(yoji, 24, yAct));   // row 30
+    cliMgmt.splice(0,12,...extract12(yoji, 28, yAct));   // row 34
+    cxbCont.splice(0,12,...extract12(yoji, 31, yAct));   // row 37
     cxbPrj.splice( 0,12,...Array.from({length:12},(_,m)=>
-      (gv(t_cxbPair,0,yAct(m))||0)+(gv(t_cxbPair,1,yAct(m))||0)));
-    newBdg.splice( 0,12,...extract12(t_newPair,  0, yBdg));
-    newAct.splice( 0,12,...extract12(t_newPair,  1, yAct));
-    netBdg.splice( 0,12,...extract12(t_netPair,  0, yBdg));
-    netAct.splice( 0,12,...extract12(t_netPair,  1, yAct));
-    gpBdg.splice(  0,12,...extract12(t_gpPair,   0, yBdg));
-    gpAct.splice(  0,12,...extract12(t_gpPair,   1, yAct));
-    opBdg.splice(  0,12,...extract12(t_opPair,   0, yBdg));
-    opAct.splice(  0,12,...extract12(t_opPair,   1, yAct));
+      (gv(yoji,34,yAct(m))||0)+(gv(yoji,35,yAct(m))||0)));  // rows 40+41
+    newBdg.splice( 0,12,...extract12(yoji, 41, yBdg));   // row 47
+    newAct.splice( 0,12,...extract12(yoji, 42, yAct));   // row 48
+    netBdg.splice( 0,12,...extract12(yoji, 46, yBdg));   // row 52
+    netAct.splice( 0,12,...extract12(yoji, 47, yAct));   // row 53
+    gpBdg.splice(  0,12,...extract12(yoji, 63, yBdg));   // row 69
+    gpAct.splice(  0,12,...extract12(yoji, 64, yAct));   // row 70
+    opBdg.splice(  0,12,...extract12(yoji, 66, yBdg));   // row 72
+    opAct.splice(  0,12,...extract12(yoji, 67, yAct));   // row 73
 
-    // ── plan別売上(月額) ──
-    keiei.splice(  0,12,...extract12(t_keiei,    0, pAct));
+    // ── plan別売上(月額) (インデックス = スプレッドシート行 - 90) ──
+    keiei.splice(  0,12,...extract12(plan, 0, pAct));    // row 90
     media.splice(  0,12,...Array.from({length:12},(_,m)=>
-      (gv(t_mediaPair,0,pAct(m))||0)+(gv(t_mediaPair,1,pAct(m))||0)));
-    bkstage.splice(0,12,...extract12(t_bkstage,  0, pAct));
+      (gv(plan,2,pAct(m))||0)+(gv(plan,3,pAct(m))||0)));  // rows 92+93
+    bkstage.splice(0,12,...extract12(plan, 4, pAct));    // row 94
 
-    // ── MRR サマリ ──
-    newMrr.splice(    0,12,...extract12(t_mrrTop,  0, mCol));
-    newMrrCnt.splice( 0,12,...extract12(t_mrrTop,  1, mCol));
-    existMrr.splice(  0,12,...extract12(t_mrrTop,  2, mCol));
-    existMrrCnt.splice(0,12,...extract12(t_mrrTop, 3, mCol));
-    churnMrr.splice(  0,12,...extract12(t_churn,   0, mCol));
-    churnCnt.splice(  0,12,...extract12(t_churn,   1, mCol));
-    ckyakuCnt.splice( 0,12,...extract12(t_churn,   2, mCol));
+    // ── MRR (インデックス = スプレッドシート行 - 3) ──
+    newMrr.splice(     0,12,...extract12(mrr, 0,  mCol));  // row 3
+    newMrrCnt.splice(  0,12,...extract12(mrr, 1,  mCol));  // row 4
+    existMrr.splice(   0,12,...extract12(mrr, 2,  mCol));  // row 5
+    existMrrCnt.splice(0,12,...extract12(mrr, 3,  mCol));  // row 6
+    churnMrr.splice(   0,12,...extract12(mrr, 8,  mCol));  // row 11
+    churnCnt.splice(   0,12,...extract12(mrr, 9,  mCol));  // row 12
+    ckyakuCnt.splice(  0,12,...extract12(mrr, 10, mCol));  // row 13
 
     // 解約率：スプレッドシートが % 形式（0.05 = 5%）の場合に変換
-    const rateRaw = extract12(t_churnRate, 0, mCol);
+    const rateRaw = extract12(mrr, 12, mCol);              // row 15
     churnRatePct.splice(0,12,...rateRaw.map(v => v == null ? 0 : (v < 1 ? v*100 : v)));
 
     // 派生データ更新
