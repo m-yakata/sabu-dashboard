@@ -1836,29 +1836,45 @@ function renderFixedTermTable(i) {
      plan別売上 実績: 4 + m*4
      MRR:            1 + m
 ══════════════════════════════════════════════════ */
-const SPREADSHEET_ID = '1X_MtSbuMqDSkdZKYOmffHWHa1wUmGPD-Fr8zXMZ3yhM';
+// ====== GAS プロキシ設定 ======
+// GASデプロイ後に発行されたURLをここに貼り付けてください
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwxMZXZjx4XyKg2Z__pfJvFk_2d_2zMPkPYq7lzdrQPE656JlRKTN-DAqJ5p32qN9Zp/exec';
+
 const SHEET_YOJI = '【8期】予実管理表';
 const SHEET_PLAN = '【8期】plan別売上(月額)';
 const SHEET_MRR  = '【8期】MRR';
 
-async function fetchGvizTable(sheetName, range) {
-  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`
-            + `&sheet=${encodeURIComponent(sheetName)}&range=${range}`;
-  const res  = await fetch(url);
-  const txt  = await res.text();
-  const json = JSON.parse(txt.match(/setResponse\(([\s\S]*)\)/)[1]);
-  return json.table;
+// シート名 → GASが受け取るキー
+const SHEET_KEY = {
+  [SHEET_YOJI]: 'yoji',
+  [SHEET_PLAN]: 'plan',
+  [SHEET_MRR]:  'mrr',
+};
+
+/**
+ * GASプロキシ経由でシートのセル値を取得する
+ * @returns {Array<Array>} 2次元配列 rows[行][列] (0始まり、range左上が[0][0])
+ */
+async function fetchSheet(sheetName, range) {
+  const key = SHEET_KEY[sheetName];
+  const url = `${GAS_URL}?sheet=${encodeURIComponent(key)}&range=${encodeURIComponent(range)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (json.error) throw new Error('GAS error: ' + json.error);
+  return json.rows; // 2D array
 }
 
-function gv(table, ri, ci) {
-  const row = table.rows[ri];
+/** rows[ri][ci] から値を取得。nullや空文字はnullを返す */
+function gv(rows, ri, ci) {
+  const row = rows[ri];
   if (!row) return null;
-  const cell = row.c[ci];
-  return (cell && cell.v != null) ? cell.v : null;
+  const val = row[ci];
+  return (val != null && val !== '') ? val : null;
 }
 
-function extract12(table, ri, colFn) {
-  return Array.from({length: 12}, (_, m) => gv(table, ri, colFn(m)));
+function extract12(rows, ri, colFn) {
+  return Array.from({length: 12}, (_, m) => gv(rows, ri, colFn(m)));
 }
 
 const yBdg = m => 5 + m * 2;   // 予実管理表 予算列
@@ -1894,23 +1910,23 @@ async function initFetch() {
       t_churn,     // MRR rows 11-13: churnMrr, churnCnt, ckyakuCnt
       t_churnRate, // MRR row 15: churnRatePct
     ] = await Promise.all([
-      fetchGvizTable(SHEET_YOJI, 'A6:AC6'),
-      fetchGvizTable(SHEET_YOJI, 'A24:AC24'),
-      fetchGvizTable(SHEET_YOJI, 'A27:AC27'),
-      fetchGvizTable(SHEET_YOJI, 'A29:AC30'),
-      fetchGvizTable(SHEET_YOJI, 'A34:AC34'),
-      fetchGvizTable(SHEET_YOJI, 'A37:AC37'),
-      fetchGvizTable(SHEET_YOJI, 'A40:AC41'),
-      fetchGvizTable(SHEET_YOJI, 'A47:AC48'),
-      fetchGvizTable(SHEET_YOJI, 'A52:AC53'),
-      fetchGvizTable(SHEET_YOJI, 'A69:AC70'),
-      fetchGvizTable(SHEET_YOJI, 'A72:AC73'),
-      fetchGvizTable(SHEET_PLAN, 'A90:AW90'),
-      fetchGvizTable(SHEET_PLAN, 'A92:AW93'),
-      fetchGvizTable(SHEET_PLAN, 'A94:AW94'),
-      fetchGvizTable(SHEET_MRR,  'A3:M6'),
-      fetchGvizTable(SHEET_MRR,  'A11:M13'),
-      fetchGvizTable(SHEET_MRR,  'A15:M15'),
+      fetchSheet(SHEET_YOJI, 'A6:AC6'),
+      fetchSheet(SHEET_YOJI, 'A24:AC24'),
+      fetchSheet(SHEET_YOJI, 'A27:AC27'),
+      fetchSheet(SHEET_YOJI, 'A29:AC30'),
+      fetchSheet(SHEET_YOJI, 'A34:AC34'),
+      fetchSheet(SHEET_YOJI, 'A37:AC37'),
+      fetchSheet(SHEET_YOJI, 'A40:AC41'),
+      fetchSheet(SHEET_YOJI, 'A47:AC48'),
+      fetchSheet(SHEET_YOJI, 'A52:AC53'),
+      fetchSheet(SHEET_YOJI, 'A69:AC70'),
+      fetchSheet(SHEET_YOJI, 'A72:AC73'),
+      fetchSheet(SHEET_PLAN, 'A90:AW90'),
+      fetchSheet(SHEET_PLAN, 'A92:AW93'),
+      fetchSheet(SHEET_PLAN, 'A94:AW94'),
+      fetchSheet(SHEET_MRR,  'A3:M6'),
+      fetchSheet(SHEET_MRR,  'A11:M13'),
+      fetchSheet(SHEET_MRR,  'A15:M15'),
     ]);
 
     // ── 予実管理表 ──
