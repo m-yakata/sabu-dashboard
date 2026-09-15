@@ -562,7 +562,7 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
   <div class="sidebar-footer">
     データソース<br>
     Google スプレッドシート<br>
-    【8期】売上推移表
+    <span id="syncStatus" style="font-size:10px;color:var(--c-sidebar-text)">同期中…</span>
   </div>
 </aside>
 
@@ -961,7 +961,7 @@ const pctOf  = (a,b) => b ? (a - b) / Math.abs(b) * 100 : 0;
 const isGood = (a,b) => a >= b;  // 実績≧予算 → 改善
 const isAct  = i  => i < ACTUAL_COUNT;
 const monSum = i  => bpoMon[i] + cliMgmt[i] + cxbCont[i];
-const sptSum = i  => bpoUp[i]  + bpoSpt[i]  + cxbPrj[i] + othNew[i];
+const sptSum = i  => bpoUp[i]  + bpoSpt[i]  + cxbPrj[i] + keiei[i] + media[i] + bkstage[i];
 
 /* ══════════════════════════════════════════════════
    STATE
@@ -1828,12 +1828,151 @@ function renderFixedTermTable(i) {
   document.getElementById('fixedTermBody').innerHTML = rows;
 }
 
-/* Ensure Chart.js and DOM are both ready */
-if (typeof Chart !== 'undefined') {
+/* ══════════════════════════════════════════════════
+   AUTO-FETCH — Google スプレッドシート連係
+   シート: 【8期】予実管理表 / plan別売上(月額) / MRR
+   列ルール (0-based, monthIdx=0=8月):
+     予実管理表 予算: 5 + m*2  実績: 6 + m*2
+     plan別売上 実績: 4 + m*4
+     MRR:            1 + m
+══════════════════════════════════════════════════ */
+const SPREADSHEET_ID = '1X_MtSbuMqDSkdZKYOmffHWHa1wUmGPD-Fr8zXMZ3yhM';
+const SHEET_YOJI = '【8期】予実管理表';
+const SHEET_PLAN = '【8期】plan別売上(月額)';
+const SHEET_MRR  = '【8期】MRR';
+
+async function fetchGvizTable(sheetName, range) {
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`
+            + `&sheet=${encodeURIComponent(sheetName)}&range=${range}`;
+  const res  = await fetch(url);
+  const txt  = await res.text();
+  const json = JSON.parse(txt.match(/setResponse\(([\s\S]*)\)/)[1]);
+  return json.table;
+}
+
+function gv(table, ri, ci) {
+  const row = table.rows[ri];
+  if (!row) return null;
+  const cell = row.c[ci];
+  return (cell && cell.v != null) ? cell.v : null;
+}
+
+function extract12(table, ri, colFn) {
+  return Array.from({length: 12}, (_, m) => gv(table, ri, colFn(m)));
+}
+
+const yBdg = m => 5 + m * 2;   // 予実管理表 予算列
+const yAct = m => 6 + m * 2;   // 予実管理表 実績列
+const pAct = m => 4 + m * 4;   // plan別売上(月額) 実績列
+const mCol = m => 1 + m;       // MRR 列
+
+async function initFetch() {
+  const syncEl = document.getElementById('syncStatus');
+  const setSync = (txt, color) => { if (syncEl) { syncEl.textContent = txt; if(color) syncEl.style.color = color; } };
+
+  // 静的データで先に描画
   render();
+  setSync('同期中…');
+
+  try {
+    const [
+      t_bpoMon,    // 予実管理表 row 6
+      t_bpoUp,     // 予実管理表 row 24
+      t_bpoSpt,    // 予実管理表 row 27
+      t_bpoPair,   // 予実管理表 rows 29-30: bpoBdg(0), bpoAct(1)
+      t_cliMgmt,   // 予実管理表 row 34
+      t_cxbCont,   // 予実管理表 row 37
+      t_cxbPair,   // 予実管理表 rows 40-41: cxbPrj合計
+      t_newPair,   // 予実管理表 rows 47-48: newBdg(0), newAct(1)
+      t_netPair,   // 予実管理表 rows 52-53: netBdg(0), netAct(1)
+      t_gpPair,    // 予実管理表 rows 69-70: gpBdg(0), gpAct(1)
+      t_opPair,    // 予実管理表 rows 72-73: opBdg(0), opAct(1)
+      t_keiei,     // plan別売上 row 90
+      t_mediaPair, // plan別売上 rows 92-93: media合計
+      t_bkstage,   // plan別売上 row 94
+      t_mrrTop,    // MRR rows 3-6: newMrr/Cnt, existMrr/Cnt
+      t_churn,     // MRR rows 11-13: churnMrr, churnCnt, ckyakuCnt
+      t_churnRate, // MRR row 15: churnRatePct
+    ] = await Promise.all([
+      fetchGvizTable(SHEET_YOJI, 'A6:AC6'),
+      fetchGvizTable(SHEET_YOJI, 'A24:AC24'),
+      fetchGvizTable(SHEET_YOJI, 'A27:AC27'),
+      fetchGvizTable(SHEET_YOJI, 'A29:AC30'),
+      fetchGvizTable(SHEET_YOJI, 'A34:AC34'),
+      fetchGvizTable(SHEET_YOJI, 'A37:AC37'),
+      fetchGvizTable(SHEET_YOJI, 'A40:AC41'),
+      fetchGvizTable(SHEET_YOJI, 'A47:AC48'),
+      fetchGvizTable(SHEET_YOJI, 'A52:AC53'),
+      fetchGvizTable(SHEET_YOJI, 'A69:AC70'),
+      fetchGvizTable(SHEET_YOJI, 'A72:AC73'),
+      fetchGvizTable(SHEET_PLAN, 'A90:AW90'),
+      fetchGvizTable(SHEET_PLAN, 'A92:AW93'),
+      fetchGvizTable(SHEET_PLAN, 'A94:AW94'),
+      fetchGvizTable(SHEET_MRR,  'A3:M6'),
+      fetchGvizTable(SHEET_MRR,  'A11:M13'),
+      fetchGvizTable(SHEET_MRR,  'A15:M15'),
+    ]);
+
+    // ── 予実管理表 ──
+    bpoMon.splice( 0,12,...extract12(t_bpoMon,   0, yAct));
+    bpoUp.splice(  0,12,...extract12(t_bpoUp,    0, yAct));
+    bpoSpt.splice( 0,12,...extract12(t_bpoSpt,   0, yAct));
+    bpoBdg.splice( 0,12,...extract12(t_bpoPair,  0, yBdg));
+    bpoAct.splice( 0,12,...extract12(t_bpoPair,  1, yAct));
+    cliMgmt.splice(0,12,...extract12(t_cliMgmt,  0, yAct));
+    cxbCont.splice(0,12,...extract12(t_cxbCont,  0, yAct));
+    cxbPrj.splice( 0,12,...Array.from({length:12},(_,m)=>
+      (gv(t_cxbPair,0,yAct(m))||0)+(gv(t_cxbPair,1,yAct(m))||0)));
+    newBdg.splice( 0,12,...extract12(t_newPair,  0, yBdg));
+    newAct.splice( 0,12,...extract12(t_newPair,  1, yAct));
+    netBdg.splice( 0,12,...extract12(t_netPair,  0, yBdg));
+    netAct.splice( 0,12,...extract12(t_netPair,  1, yAct));
+    gpBdg.splice(  0,12,...extract12(t_gpPair,   0, yBdg));
+    gpAct.splice(  0,12,...extract12(t_gpPair,   1, yAct));
+    opBdg.splice(  0,12,...extract12(t_opPair,   0, yBdg));
+    opAct.splice(  0,12,...extract12(t_opPair,   1, yAct));
+
+    // ── plan別売上(月額) ──
+    keiei.splice(  0,12,...extract12(t_keiei,    0, pAct));
+    media.splice(  0,12,...Array.from({length:12},(_,m)=>
+      (gv(t_mediaPair,0,pAct(m))||0)+(gv(t_mediaPair,1,pAct(m))||0)));
+    bkstage.splice(0,12,...extract12(t_bkstage,  0, pAct));
+
+    // ── MRR サマリ ──
+    newMrr.splice(    0,12,...extract12(t_mrrTop,  0, mCol));
+    newMrrCnt.splice( 0,12,...extract12(t_mrrTop,  1, mCol));
+    existMrr.splice(  0,12,...extract12(t_mrrTop,  2, mCol));
+    existMrrCnt.splice(0,12,...extract12(t_mrrTop, 3, mCol));
+    churnMrr.splice(  0,12,...extract12(t_churn,   0, mCol));
+    churnCnt.splice(  0,12,...extract12(t_churn,   1, mCol));
+    ckyakuCnt.splice( 0,12,...extract12(t_churn,   2, mCol));
+
+    // 解約率：スプレッドシートが % 形式（0.05 = 5%）の場合に変換
+    const rateRaw = extract12(t_churnRate, 0, mCol);
+    churnRatePct.splice(0,12,...rateRaw.map(v => v == null ? 0 : (v < 1 ? v*100 : v)));
+
+    // 派生データ更新
+    churnMrrAbs.splice(0,12,...churnMrr.map(v  => v ? Math.abs(v) : 0));
+    churnCntM.splice(  0,12,...churnCnt.map(v  => v || 0));
+    churnUnitAvg.splice(0,12,...churnMrrAbs.map((v,i)=>
+      ckyakuCnt[i] ? Math.round(v/ckyakuCnt[i]) : 0));
+
+    const now = new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    setSync(`最終同期: ${now}`, 'rgba(255,255,255,0.5)');
+    render();  // データ更新後に再描画
+
+  } catch(e) {
+    console.warn('Auto-fetch failed, using static data:', e);
+    setSync('同期失敗（静的データ）', '#F87171');
+  }
+}
+
+/* Ensure Chart.js and DOM are both ready, then fetch */
+if (typeof Chart !== 'undefined') {
+  initFetch();
 } else {
-  document.querySelector('script[src*="chart"]').addEventListener('load', render);
-  window.addEventListener('load', render);
+  document.querySelector('script[src*="chart"]').addEventListener('load', initFetch);
+  window.addEventListener('load', initFetch);
 }
 </script>
 </body>
