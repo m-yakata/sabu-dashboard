@@ -800,10 +800,48 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
   </div><!-- /content -->
 </main>
 
+<!-- ローディングオーバーレイ -->
+<div id="loadingOverlay" style="
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(13,21,33,0.72);backdrop-filter:blur(4px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <div class="loading-spinner" style="
+    width:40px;height:40px;border-radius:50%;
+    border:3px solid rgba(255,255,255,0.15);
+    border-top-color:#0CA7A0;
+    animation:spin 0.8s linear infinite;">
+  </div>
+  <div class="loading-msg" style="color:#fff;font-size:14px;font-family:'Noto Sans JP',sans-serif;">
+    データを取得中…
+  </div>
+  <div class="loading-err" hidden style="
+    color:#F43F5E;font-size:12px;cursor:pointer;
+    padding:6px 14px;border:1px solid rgba(244,63,94,0.4);border-radius:6px;"
+    onclick="document.getElementById('loadingOverlay').hidden=true">
+    閉じる
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- フェッチ失敗バナー（控えめ表示） -->
+<div id="fetchErrorBanner" hidden style="
+  position:fixed;bottom:12px;right:12px;z-index:100;
+  background:#1B2D42;border:1px solid rgba(244,63,94,0.4);
+  color:rgba(255,255,255,0.75);font-size:11px;padding:8px 14px;
+  border-radius:6px;cursor:pointer;max-width:260px;"
+  onclick="this.hidden=true">
+  ⚠ シートの自動取得に失敗。前回データを表示中
+</div>
+
 <!-- ══════════════════════════════════════════════════
      DATA — 第8期 (2026年8月〜2027年7月)
-     Source: Google スプレッドシート【8期】売上推移表
-     Last sync: 2026/09/11
+     ページ読込時に以下をスプレッドシートから自動取得:
+       ① KPI推移 ← 【8期】売上推移表
+       ② 新規/既存MRR・解約率 ← 【8期】MRR（サマリー行）
+       ③ サブスク型レコード ← 【8期】MRR A列〜G列
+       ④ 有期プランレコード ← 【8期】有期型
+       ⑤ 解約一覧 ← 【8期】MRR I列〜P列
+     フェッチ失敗時は以下の静的フォールバックを使用。
 ══════════════════════════════════════════════════ -->
 <script>
 /* ── 月ラベル ── */
@@ -812,63 +850,63 @@ const LONG_M  = ['2026年8月','2026年9月','2026年10月','2026年11月','2026
                  '2027年1月','2027年2月','2027年3月','2027年4月','2027年5月','2027年6月','2027年7月'];
 
 /* ── 純売上高 ── */
-const netBdg  = [36415591,34027905,50206423,36769942,38769942,40049942,40204942,40444942,56484942,42124942,42764942,43404942];
-const netAct  = [38088088,34643000,33443000,33343000,34193000,31993000,28498000,26898000,25948000,25948000,25848000,25848000];
+let netBdg  = [36415591,34027905,50206423,36769942,38769942,40049942,40204942,40444942,56484942,42124942,42764942,43404942];
+let netAct  = [38088088,34643000,33443000,33343000,34193000,31993000,28498000,26898000,25948000,25948000,25848000,25848000];
 
 /* ── BPO事業 ── */
-const bpoBdg  = [29935591,28747905,28551423,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942];
-const bpoAct  = [31489038,27113000,23848000,23848000,23998000,23848000,23803000,23803000,23753000,23753000,23653000,23653000];
+let bpoBdg  = [29935591,28747905,28551423,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942];
+let bpoAct  = [31489038,27113000,23848000,23848000,23998000,23848000,23803000,23803000,23753000,23753000,23653000,23653000];
 
 /* ── 新規事業 ── */
-const newBdg  = [6480000,5280000,21655000,8415000,10415000,11695000,11850000,12090000,28130000,13770000,14410000,15050000];
-const newAct  = [6870000,7530000,9595000,9495000,10195000,8145000,4695000,3095000,2195000,2195000,2195000,2195000];
+let newBdg  = [6480000,5280000,21655000,8415000,10415000,11695000,11850000,12090000,28130000,13770000,14410000,15050000];
+let newAct  = [6870000,7530000,9595000,9495000,10195000,8145000,4695000,3095000,2195000,2195000,2195000,2195000];
 
 /* ── 月額サービス内訳 ── */
-const bpoMon  = [26168000,24923000,23448000,23448000,23448000,23448000,23403000,23403000,23353000,23353000,23353000,23353000];
-const cliMgmt = [665000,645000,610000,600000,600000,600000,600000,590000,590000,590000,590000,590000];
-const cxbCont = [240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000];
+let bpoMon  = [26168000,24923000,23448000,23448000,23448000,23448000,23403000,23403000,23353000,23353000,23353000,23353000];
+let cliMgmt = [665000,645000,610000,600000,600000,600000,600000,590000,590000,590000,590000,590000];
+let cxbCont = [240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000];
 
 /* ── 単発・有期内訳 ── */
-const bpoUp   = [910000,0,0,0,0,0,0,0,0,0,0,0];
-const bpoSpt  = [4411038,2190000,400000,400000,550000,400000,400000,400000,400000,400000,300000,300000];
-const cxbPrj  = [900000,3200000,5150000,5150000,6350000,4300000,1700000,900000,0,0,0,0];
-const othNew  = [5065000,3445000,3595000,3505000,3005000,3005000,2155000,1365000,1365000,1365000,1365000,1365000];
-const keiei   = [1380000,1560000,2410000,2320000,1820000,1820000,970000,180000,180000,180000,180000,180000];
-const media   = [2400000,0,0,0,0,0,0,0,0,0,0,0];
-const bkstage = [1285000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000];
+let bpoUp   = [910000,0,0,0,0,0,0,0,0,0,0,0];
+let bpoSpt  = [4411038,2190000,400000,400000,550000,400000,400000,400000,400000,400000,300000,300000];
+let cxbPrj  = [900000,3200000,5150000,5150000,6350000,4300000,1700000,900000,0,0,0,0];
+let othNew  = [5065000,3445000,3595000,3505000,3005000,3005000,2155000,1365000,1365000,1365000,1365000,1365000];
+let keiei   = [1380000,1560000,2410000,2320000,1820000,1820000,970000,180000,180000,180000,180000,180000];
+let media   = [2400000,0,0,0,0,0,0,0,0,0,0,0];
+let bkstage = [1285000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000,1185000];
 
 /* ── 売上総利益（予実管理表 69-71行） ── */
-const gpBdg  = [16070668,13682982,21361500,16425019,18425019,19705019,19860019,20100019,26640019,20780019,21420019,22060019];
-const gpAct  = [22624766,null,null,null,null,null,null,null,null,null,null,null];
+let gpBdg  = [16070668,13682982,21361500,16425019,18425019,19705019,19860019,20100019,26640019,20780019,21420019,22060019];
+let gpAct  = [22624766,null,null,null,null,null,null,null,null,null,null,null];
 
 /* ── 営業利益（予実管理表 72-74行） ── */
-const opBdg  = [-1913882,-4271722,3204565,-1563961,411039,1675039,1828102,2065102,8404602,2724102,3356102,3988102];
-const opAct  = [2612080,null,null,null,null,null,null,null,null,null,null,null];
+let opBdg  = [-1913882,-4271722,3204565,-1563961,411039,1675039,1828102,2065102,8404602,2724102,3356102,3988102];
+let opAct  = [2612080,null,null,null,null,null,null,null,null,null,null,null];
 
 /* ── 新規MRR（MRR 3-4行） ── */
-const newMrr    = [0,180000,0,0,0,0,0,0,0,0,0,0];
-const newMrrCnt = [0,1,0,0,0,0,0,0,0,0,0,0];
+let newMrr    = [0,180000,0,0,0,0,0,0,0,0,0,0];
+let newMrrCnt = [0,1,0,0,0,0,0,0,0,0,0,0];
 
 /* ── 既存MRR（MRR 5-6行） ── */
-const existMrr    = [470000,260000,0,0,0,0,0,0,0,0,0,0];
-const existMrrCnt = [7,2,0,0,0,0,0,0,0,0,0,0];
+let existMrr    = [470000,260000,0,0,0,0,0,0,0,0,0,0];
+let existMrrCnt = [7,2,0,0,0,0,0,0,0,0,0,0];
 
-/* ── 当月終了予定MRR（MRR 11-12行） ── */
-const churnMrr  = [-1290000,-1270000,0,0,0,0,0,0,0,0,0,0];
-const churnCnt  = [17,16,2,2,0,0,0,0,0,0,0,0];
-const ckyakuCnt = [13,12,0,0,0,0,0,0,0,0,0,0];
+/* ── 当月終了予定MRR（【8期】MRRシートから自動計算） ── */
+let churnMrr  = new Array(12).fill(0);
+let churnCnt  = new Array(12).fill(0);
+let ckyakuCnt = new Array(12).fill(0);
 
 /* ── 確定実績の月数（0-indexed: 0=Aug2026が確定） ── */
 const ACTUAL_COUNT = 1;
 
-/* ── 解約推移データ（【8期】MRRシート） ── */
-const churnMrrAbs  = [1290000,1270000,0,0,0,0,0,0,0,0,0,0]; // 解約MRR絶対値
-const churnCntM    = [17,16,2,2,0,0,0,0,0,0,0,0];            // 解約件数
-const churnRatePct = [5.15,5.06,0.67,0.68,0,0,0,0,0,0,0,0]; // 解約率(%)
-const churnUnitAvg = [75882,79375,0,0,0,0,0,0,0,0,0,0];      // 平均解約単価
+/* ── 解約推移データ（【8期】MRRシートから自動取得） ── */
+let churnMrrAbs  = new Array(12).fill(0);
+let churnCntM    = new Array(12).fill(0);
+let churnRatePct = [5.15,5.06,0.67,0.68,0,0,0,0,0,0,0,0]; // 解約率（スプレッドシートから自動取得）
+let churnUnitAvg = new Array(12).fill(0);
 
 /* ── サブスク型新規・既存MRRレコード（【8期】MRR A〜G列 18行目以降） ── */
-const SAAS_RECORDS = [
+const SAAS_RECORDS_FALLBACK = [
   // 2026年8月（7件）
   {m:'2026年8月', type:'既存', name:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科', plan:'【RPO】PROプラン',                    mrr:140000, term:6},
   {m:'2026年8月', type:'既存', name:'こばやし歯科医院',                                    plan:'【BPO】伴走型プラン',                  mrr:150000, term:6},
@@ -884,7 +922,7 @@ const SAAS_RECORDS = [
 ];
 
 /* ── 有期プランレコード（【8期】有期型） ── */
-const FIXED_RECORDS = [
+const FIXED_RECORDS_FALLBACK = [
   {m:'2026年8月',  type:'新規', name:'一般社団法人デンタルＡＩ',                              dept:'学会', plan:'【学会】パッケージプラン',        mrr:100000,  term:2},
   {m:'2026年9月',  type:'既存', name:'医療法人西山歯科',                                       dept:'CX',   plan:'【CX】ブートキャンプ(本支援)',   mrr:400000,  term:4},
   {m:'2026年9月',  type:'既存', name:'清水歯科医院',                                           dept:'CX',   plan:'【CX】ブートキャンプ(本支援)',   mrr:400000,  term:4},
@@ -904,8 +942,15 @@ const FIXED_RECORDS = [
   {m:'2026年12月', type:'新規', name:'はばたき歯科おとなこども歯科クリニック',                 dept:'CX',   plan:'【CX】ブートキャンプ(本支援)',   mrr:450000,  term:4},
 ];
 
-/* MRR変動一覧（【8期】MRR I18以下、I列の月でグループ化） */
-const CHURN_RECORDS = [
+/* ライブデータ（フォールバックで初期化 → 自動取得後に上書き） */
+let SAAS_RECORDS  = SAAS_RECORDS_FALLBACK.slice();
+let FIXED_RECORDS = FIXED_RECORDS_FALLBACK.slice();
+
+/* MRR変動一覧（【8期】MRR I18以下 → ページ読み込み時に自動取得） */
+let CHURN_RECORDS = [];
+
+/* フォールバック用静的データ（フェッチ失敗時に使用） */
+const CHURN_RECORDS_FALLBACK = [
   // ── 2026年8月（17件）──
   {m:'2026年8月', colA:'2026年8月', type:'解約', name:'仙台おとなこども歯科・矯正歯科', plan:'【HP制作】保守管理', mrr:5000, start:'2023年1月', term:'3年8ヶ月', reason:'他社にてホームページをリニューアルするため、保守解約。（採用LP）'},
   {m:'2026年8月', colA:'2026年8月', type:'解約', name:'GOSI矯正歯科', plan:'【HP制作】保守管理', mrr:0, start:'2024年3月', term:'2年6ヶ月', reason:''},
@@ -948,6 +993,321 @@ const CHURN_RECORDS = [
   {m:'2026年11月', colA:null, type:'既存', name:'大崎オーバルコート歯科・矯正歯科室', plan:'【HP制作】保守管理', mrr:0, start:'2024年4月', term:'2年8ヶ月', reason:'医院にてサイト管理をすることになった'},
   {m:'2026年11月', colA:null, type:'既存', name:'AO1デンタルクリニック', plan:'【HP制作】保守管理', mrr:0, start:'2024年10月', term:'2年2ヶ月', reason:'他社にてホームページ管理を行うことになったため'},
 ];
+
+/* ══════════════════════════════════════════════════
+   SHEETS AUTO-FETCH（全シート一括自動取得）
+   スプレッドシートID: 1X_MtSbuMqDSkdZKYOmffHWHa1wUmGPD-Fr8zXMZ3yhM
+══════════════════════════════════════════════════ */
+const SHEET_ID   = '1X_MtSbuMqDSkdZKYOmffHWHa1wUmGPD-Fr8zXMZ3yhM';
+const MRR_GID    = '38936773';
+
+/* JSONP でスプレッドシートを取得（CORSを回避、ローカル開発時も動作）
+   gidOrSheet: GID 文字列 or シート名（useSheet=true のとき）
+   range:      A1 記法の範囲文字列 */
+function fetchGvizJSONP(gidOrSheet, range, useSheet) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_gviz_' + Math.random().toString(36).slice(2);
+    const sheetParam = useSheet
+      ? `&sheet=${encodeURIComponent(gidOrSheet)}`
+      : `&gid=${gidOrSheet}`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
+              + `?tqx=out:json&callback=${cbName}${sheetParam}&range=${encodeURIComponent(range)}`;
+
+    let timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 15000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function(data) { cleanup(); resolve(data); };
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = () => { cleanup(); reject(new Error('Script load failed')); };
+    document.head.appendChild(script);
+  });
+}
+
+/* gviz JSON → 文字列配列の行リストに変換 */
+function gvizToRows(data) {
+  if (!data || !data.table || !data.table.rows) return [];
+  return data.table.rows.map(row =>
+    (row.c || []).map(cell => {
+      if (!cell || cell.v == null) return '';
+      if (typeof cell.v === 'number') return String(cell.v);
+      if (typeof cell.v === 'string' && cell.v.startsWith('Date('))
+        return cell.f || '';
+      return String(cell.v);
+    })
+  );
+}
+
+/* 日付文字列を「YYYY年M月」形式に正規化 */
+function toJaDate(s) {
+  if (!s) return '';
+  s = s.trim();
+  if (/^\d{4}年\d+月$/.test(s)) return s;
+  const m = s.match(/^(\d{4})[\/\-年]0?(\d{1,2})/);
+  return m ? `${m[1]}年${parseInt(m[2])}月` : s;
+}
+
+/* ── 売上推移表 → KPI配列を構築 ──
+   行番号(1-based) → 0-based index
+   列数式: colIdx = 5 + monthIdx * 2  (0-based, 8月=0)
+   bpoMon:row3  bpoUp:row21  bpoSpt:row24
+   bpoBdg:row26 bpoAct:row27 cliMgmt:row30 cxbCont:row33
+   cxbPrj:row37 othNew:row41 newBdg:row43  newAct:row44
+   netBdg:row48 netAct:row49 gpBdg:row60   gpAct:row61
+   opBdg:row63  opAct:row64                              */
+function buildKpiFromSalesSheet(rows) {
+  function getNum(rowIdx, monthIdx) {
+    const r = rows[rowIdx];
+    if (!r) return null;
+    const raw = r[5 + monthIdx * 2];
+    if (raw === '' || raw == null) return null;
+    const n = parseFloat(String(raw).replace(/[,￥¥\s]/g, ''));
+    return isNaN(n) ? null : Math.round(n);
+  }
+  const ROW = {
+    bpoMon:2, bpoUp:20, bpoSpt:23, bpoBdg:25, bpoAct:26,
+    cliMgmt:29, cxbCont:32, cxbPrj:36, othNew:40,
+    newBdg:42, newAct:43, netBdg:47, netAct:48,
+    gpBdg:59, gpAct:60, opBdg:62, opAct:63
+  };
+  for (let i = 0; i < 12; i++) {
+    const g = (key) => { const v = getNum(ROW[key], i); return v; };
+    if (g('netBdg')  !== null) netBdg[i]  = g('netBdg');
+    if (g('netAct')  !== null) netAct[i]  = g('netAct');
+    else if (i > 0)            netAct[i]  = null;   // 未確定月はnullを維持
+    if (g('bpoBdg')  !== null) bpoBdg[i]  = g('bpoBdg');
+    if (g('bpoAct')  !== null) bpoAct[i]  = g('bpoAct');
+    if (g('newBdg')  !== null) newBdg[i]  = g('newBdg');
+    if (g('newAct')  !== null) newAct[i]  = g('newAct');
+    if (g('gpBdg')   !== null) gpBdg[i]   = g('gpBdg');
+    if (g('gpAct')   !== null) gpAct[i]   = g('gpAct');
+    else if (i > 0)            gpAct[i]   = null;
+    if (g('opBdg')   !== null) opBdg[i]   = g('opBdg');
+    if (g('opAct')   !== null) opAct[i]   = g('opAct');
+    else if (i > 0)            opAct[i]   = null;
+    if (g('bpoMon')  !== null) bpoMon[i]  = g('bpoMon');
+    if (g('bpoUp')   !== null) bpoUp[i]   = g('bpoUp');
+    if (g('bpoSpt')  !== null) bpoSpt[i]  = g('bpoSpt');
+    if (g('cliMgmt') !== null) cliMgmt[i] = g('cliMgmt');
+    if (g('cxbCont') !== null) cxbCont[i] = g('cxbCont');
+    if (g('cxbPrj')  !== null) cxbPrj[i]  = g('cxbPrj');
+    if (g('othNew')  !== null) othNew[i]   = g('othNew');
+  }
+}
+
+/* ── MRR シートサマリー行（A1:M20）→ 新規/既存MRR・解約率 ──
+   Row3(idx2): 新規MRR    B-M → monthIdx 0-11
+   Row4(idx3): 新規件数
+   Row5(idx4): 既存MRR
+   Row6(idx5): 既存件数
+   Row14(idx13): 解約率(%)                               */
+function buildMrrSummary(rows) {
+  function getVal(rowIdx, monthIdx) {
+    const r = rows[rowIdx];
+    if (!r) return null;
+    const raw = r[1 + monthIdx]; // B=col1, C=col2, ...
+    if (raw === '' || raw == null) return null;
+    return String(raw).replace(/[,￥¥\s]/g, '');
+  }
+  for (let i = 0; i < 12; i++) {
+    const nm = getVal(2, i);
+    if (nm !== null) newMrr[i]    = Math.round(parseFloat(nm)) || 0;
+    const nc = getVal(3, i);
+    if (nc !== null) newMrrCnt[i] = Math.round(parseFloat(nc)) || 0;
+    const em = getVal(4, i);
+    if (em !== null) existMrr[i]    = Math.round(parseFloat(em)) || 0;
+    const ec = getVal(5, i);
+    if (ec !== null) existMrrCnt[i] = Math.round(parseFloat(ec)) || 0;
+    const cr = getVal(13, i);
+    if (cr !== null) {
+      const pct = parseFloat(String(cr).replace('%',''));
+      if (!isNaN(pct)) churnRatePct[i] = pct;
+    }
+  }
+}
+
+/* ── MRR シート A17:G300 → SAAS_RECORDS ──
+   A(0):月 B(1):種別 C(2):取引先名 D(3):部門 E(4):プラン F(5):金額 G(6):期間 */
+function buildSaasRecords(rows) {
+  const records = [];
+  for (const r of rows) {
+    const monthRaw = r[0] ? r[0].trim() : '';
+    if (!monthRaw || monthRaw === '月' || monthRaw === '対象月') continue;
+    const typeRaw = r[1] ? r[1].trim() : '';
+    if (!typeRaw) continue;
+    const mrrRaw = r[5] ? String(r[5]).replace(/[^\d\-]/g, '') : '0';
+    records.push({
+      m:    toJaDate(monthRaw),
+      type: typeRaw,
+      name: r[2] ? r[2].trim() : '',
+      plan: r[4] ? r[4].trim() : '',
+      mrr:  parseInt(mrrRaw) || 0,
+      term: parseInt(r[6]) || 0,
+    });
+  }
+  return records;
+}
+
+/* ── 有期型 シート A5:G300 → FIXED_RECORDS ──
+   A(0):日付 B(1):種別 C(2):取引先名 D(3):部門 E(4):プラン F(5):金額 G(6):期間 */
+function buildFixedRecords(rows) {
+  const records = [];
+  for (const r of rows) {
+    const dateRaw = r[0] ? r[0].trim() : '';
+    if (!dateRaw || dateRaw === '月') continue;
+    const typeRaw = r[1] ? r[1].trim() : '';
+    if (!typeRaw) continue;
+    const mrrRaw = r[5] ? String(r[5]).replace(/[^\d\-]/g, '') : '0';
+    records.push({
+      m:    toJaDate(dateRaw),
+      type: typeRaw,
+      name: r[2] ? r[2].trim() : '',
+      dept: r[3] ? r[3].trim() : '',
+      plan: r[4] ? r[4].trim() : '',
+      mrr:  parseInt(mrrRaw) || 0,
+      term: parseInt(r[6]) || 0,
+    });
+  }
+  return records;
+}
+
+/* ── CHURN_RECORDS（I18:P列）→ MRR変動一覧 ── */
+function buildChurnRecords(rows) {
+  const records = [];
+  for (const r of rows) {
+    const monthRaw = r[0] ? r[0].trim() : '';
+    if (!monthRaw || monthRaw === '対象月' || monthRaw === '月') continue;
+    const typeRaw = r[2] ? r[2].trim() : '';
+    if (!typeRaw) continue;
+    const mrrRaw = r[5] ? r[5].replace(/[^\d\-]/g, '') : '0';
+    records.push({
+      m:      toJaDate(monthRaw),
+      colA:   null,
+      type:   typeRaw,
+      name:   r[3] ? r[3].trim() : '',
+      plan:   r[4] ? r[4].trim() : '',
+      mrr:    parseInt(mrrRaw) || 0,
+      start:  toJaDate(r[1] ? r[1].trim() : ''),
+      term:   r[6] ? r[6].trim() : '',
+      reason: r[7] ? r[7].trim() : '',
+    });
+  }
+  return records;
+}
+
+/* CHURN_RECORDSから集計配列を再計算 */
+function computeChurnStats() {
+  LONG_M.forEach((month, i) => {
+    const recs = CHURN_RECORDS.filter(r => r.m === month);
+    const kyakuRecs = recs.filter(r => r.type === '解約');
+    churnCnt[i]     = recs.length;
+    churnCntM[i]    = recs.length;
+    ckyakuCnt[i]    = kyakuRecs.length;
+    churnMrrAbs[i]  = recs.reduce((s, r) => s + r.mrr, 0);
+    churnMrr[i]     = -churnMrrAbs[i];
+    churnUnitAvg[i] = recs.length > 0 ? Math.round(churnMrrAbs[i] / recs.length) : 0;
+  });
+}
+
+/* ローディングオーバーレイ表示/非表示 */
+function showLoading(msg) {
+  const el = document.getElementById('loadingOverlay');
+  if (el) { el.querySelector('.loading-msg').textContent = msg; el.hidden = false; }
+}
+function hideLoading() {
+  const el = document.getElementById('loadingOverlay');
+  if (el) el.hidden = true;
+}
+function showLoadError(msg) {
+  const el = document.getElementById('loadingOverlay');
+  if (el) {
+    el.querySelector('.loading-msg').textContent = msg;
+    el.querySelector('.loading-spinner').style.display = 'none';
+    el.querySelector('.loading-err').hidden = false;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   メイン初期化 — 全シートを並列フェッチ
+══════════════════════════════════════════════════ */
+async function init() {
+  showLoading('スプレッドシートからデータを取得中…');
+
+  /* 4つのフェッチを同時に走らせる（allSettled → 個別フォールバック） */
+  const [resChurn, resMrrSummary, resSaas, resFixed, resSales] =
+    await Promise.allSettled([
+      fetchGvizJSONP(MRR_GID, 'I18:P300'),                          // 解約一覧
+      fetchGvizJSONP(MRR_GID, 'A1:M20'),                            // MRRサマリー
+      fetchGvizJSONP(MRR_GID, 'A17:G300'),                          // サブスクレコード
+      fetchGvizJSONP('【8期】有期型', 'A5:G300', true),              // 有期プランレコード
+      fetchGvizJSONP('【8期】売上推移表', 'A1:AC70', true),          // KPI推移表
+    ]);
+
+  let anyError = false;
+
+  /* ① 解約一覧 */
+  if (resChurn.status === 'fulfilled') {
+    const built = buildChurnRecords(gvizToRows(resChurn.value));
+    if (built.length > 0) CHURN_RECORDS = built;
+    else { CHURN_RECORDS = CHURN_RECORDS_FALLBACK; anyError = true; }
+  } else {
+    console.warn('[Dashboard] 解約一覧 取得失敗:', resChurn.reason);
+    CHURN_RECORDS = CHURN_RECORDS_FALLBACK;
+    anyError = true;
+  }
+  computeChurnStats();
+
+  /* ② MRRサマリー */
+  if (resMrrSummary.status === 'fulfilled') {
+    try { buildMrrSummary(gvizToRows(resMrrSummary.value)); }
+    catch(e) { console.warn('[Dashboard] MRRサマリー 解析失敗:', e); anyError = true; }
+  } else {
+    console.warn('[Dashboard] MRRサマリー 取得失敗:', resMrrSummary.reason);
+    anyError = true;
+  }
+
+  /* ③ サブスク型レコード */
+  if (resSaas.status === 'fulfilled') {
+    const built = buildSaasRecords(gvizToRows(resSaas.value));
+    if (built.length > 0) SAAS_RECORDS = built;
+    else anyError = true;
+  } else {
+    console.warn('[Dashboard] サブスクレコード 取得失敗:', resSaas.reason);
+    anyError = true;
+  }
+
+  /* ④ 有期プランレコード */
+  if (resFixed.status === 'fulfilled') {
+    const built = buildFixedRecords(gvizToRows(resFixed.value));
+    if (built.length > 0) FIXED_RECORDS = built;
+    else anyError = true;
+  } else {
+    console.warn('[Dashboard] 有期プランレコード 取得失敗:', resFixed.reason);
+    anyError = true;
+  }
+
+  /* ⑤ KPI推移表 */
+  if (resSales.status === 'fulfilled') {
+    try { buildKpiFromSalesSheet(gvizToRows(resSales.value)); }
+    catch(e) { console.warn('[Dashboard] KPI推移表 解析失敗:', e); anyError = true; }
+  } else {
+    console.warn('[Dashboard] KPI推移表 取得失敗:', resSales.reason);
+    anyError = true;
+  }
+
+  if (anyError) {
+    const banner = document.getElementById('fetchErrorBanner');
+    if (banner) banner.hidden = false;
+  }
+  hideLoading();
+  render();
+}
 
 /* ══════════════════════════════════════════════════
    HELPERS
@@ -1828,12 +2188,18 @@ function renderFixedTermTable(i) {
   document.getElementById('fixedTermBody').innerHTML = rows;
 }
 
-/* Ensure Chart.js and DOM are both ready */
-if (typeof Chart !== 'undefined') {
-  render();
+/* Chart.js + DOM 準備完了後に init()（スプレッドシートフェッチ＋レンダリング） */
+function startApp() {
+  if (typeof Chart !== 'undefined') {
+    init();
+  } else {
+    document.querySelector('script[src*="chart"]').addEventListener('load', init);
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
 } else {
-  document.querySelector('script[src*="chart"]').addEventListener('load', render);
-  window.addEventListener('load', render);
+  startApp();
 }
 </script>
 </body>
