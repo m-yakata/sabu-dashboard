@@ -1001,55 +1001,25 @@ const CHURN_RECORDS_FALLBACK = [
 const SHEET_ID   = '1X_MtSbuMqDSkdZKYOmffHWHa1wUmGPD-Fr8zXMZ3yhM';
 const MRR_GID    = '38936773';
 
-/* google.visualization.Query.setResponse インターセプター（gviz新形式対応）
-   gviz/tq API は callback パラメータを無視し、常に
-   google.visualization.Query.setResponse(data) を呼び出す。
-   reqId で並列リクエストを識別する。 */
-window._gvizPending = window._gvizPending || new Map();
-window.google = window.google || {
-  visualization: {
-    Query: {
-      setResponse: function(data) {
-        const reqId = data && data.reqId;
-        const entry = window._gvizPending.get(String(reqId));
-        if (entry) {
-          window._gvizPending.delete(String(reqId));
-          entry.resolve(data);
-        }
-      }
-    }
-  }
-};
-
-/* gviz JSONP でスプレッドシートを取得（CORSを回避、ローカル開発時も動作）
+/* gviz/tq を fetch() で取得（Google Sheets は CORS ヘッダーを返すため JSONP 不要）
    gidOrSheet: GID 文字列 or シート名（useSheet=true のとき）
    range:      A1 記法の範囲文字列 */
-function fetchGvizJSONP(gidOrSheet, range, useSheet) {
-  return new Promise((resolve, reject) => {
-    const reqId = Math.random().toString(36).slice(2);
-    const sheetParam = useSheet
-      ? `&sheet=${encodeURIComponent(gidOrSheet)}`
-      : `&gid=${gidOrSheet}`;
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
-              + `?tqx=out:json;reqId:${reqId}${sheetParam}&range=${encodeURIComponent(range)}`;
+async function fetchGvizJSONP(gidOrSheet, range, useSheet) {
+  const sheetParam = useSheet
+    ? `&sheet=${encodeURIComponent(gidOrSheet)}`
+    : `&gid=${gidOrSheet}`;
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
+            + `?tqx=out:json${sheetParam}&range=${encodeURIComponent(range)}`;
 
-    let script;
-    function cleanup() {
-      window._gvizPending.delete(reqId);
-      if (script && script.parentNode) script.parentNode.removeChild(script);
-    }
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
 
-    const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
-
-    window._gvizPending.set(reqId, {
-      resolve: function(data) { clearTimeout(timer); cleanup(); resolve(data); }
-    });
-
-    script = document.createElement('script');
-    script.src = url;
-    script.onerror = () => { clearTimeout(timer); cleanup(); reject(new Error('Script load failed')); };
-    document.head.appendChild(script);
-  });
+  // レスポンスは /*O_o*/ google.visualization.Query.setResponse({...}); 形式
+  const json = text
+    .replace(/^[^(]*\(/, '')   // 先頭の google.visualization... ( を除去
+    .replace(/\);\s*$/, '');    // 末尾の ); を除去
+  return JSON.parse(json);
 }
 
 /* gviz JSON → 文字列配列の行リストに変換 */
