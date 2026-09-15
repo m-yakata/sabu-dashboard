@@ -1218,11 +1218,11 @@ function computeChurnStats() {
 /* ローディングオーバーレイ表示/非表示 */
 function showLoading(msg) {
   const el = document.getElementById('loadingOverlay');
-  if (el) { el.querySelector('.loading-msg').textContent = msg; el.hidden = false; }
+  if (el) { el.querySelector('.loading-msg').textContent = msg; el.style.display = 'flex'; }
 }
 function hideLoading() {
   const el = document.getElementById('loadingOverlay');
-  if (el) el.hidden = true;
+  if (el) el.style.display = 'none';   // ← hidden属性はinline display:flexに負けるので style.display で消す
 }
 function showLoadError(msg) {
   const el = document.getElementById('loadingOverlay');
