@@ -804,7 +804,7 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
 <div id="loadingOverlay" style="
   position:fixed;inset:0;z-index:9999;
   background:rgba(13,21,33,0.72);backdrop-filter:blur(4px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
   <div class="loading-spinner" style="
     width:40px;height:40px;border-radius:50%;
     border:3px solid rgba(255,255,255,0.15);
@@ -1011,7 +1011,7 @@ function fetchGvizJSONP(gidOrSheet, range, useSheet) {
       ? `&sheet=${encodeURIComponent(gidOrSheet)}`
       : `&gid=${gidOrSheet}`;
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
-              + `?tqx=out:json&callback=${cbName}${sheetParam}&range=${encodeURIComponent(range)}`;
+              + `?tqx=out:json;callback:${cbName}${sheetParam}&range=${encodeURIComponent(range)}`;
 
     let timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 8000);
 
@@ -1237,7 +1237,7 @@ function showLoadError(msg) {
    メイン初期化 — 全シートを並列フェッチ
 ══════════════════════════════════════════════════ */
 async function init() {
-  showLoading('スプレッドシートからデータを取得中…');
+  /* ローディングオーバーレイは使わず、右下の小バナーで状態表示 */
   try {
   /* 5つのフェッチを並列実行（allSettled → 個別フォールバック） */
   const [resChurn, resMrrSummary, resSaas, resFixed, resSales] =
@@ -1303,17 +1303,15 @@ async function init() {
 
   if (anyError) {
     const banner = document.getElementById('fetchErrorBanner');
-    if (banner) banner.hidden = false;
+    if (banner) { banner.hidden = false; banner.textContent = '⚠ シートの一部取得失敗。前回データを一部使用中'; }
+  } else {
+    /* 全取得成功 → 再レンダリング */
+    render();
   }
   } catch(fatal) {
     console.error('[Dashboard] 予期しないエラー:', fatal);
     CHURN_RECORDS = CHURN_RECORDS_FALLBACK;
     computeChurnStats();
-    const banner = document.getElementById('fetchErrorBanner');
-    if (banner) banner.hidden = false;
-  } finally {
-    hideLoading();
-    render();
   }
 }
 
@@ -2196,12 +2194,19 @@ function renderFixedTermTable(i) {
   document.getElementById('fixedTermBody').innerHTML = rows;
 }
 
-/* Chart.js + DOM 準備完了後に init()（スプレッドシートフェッチ＋レンダリング） */
+/* Chart.js + DOM 準備完了後に起動
+   ① まず静的データで即座にレンダリング
+   ② バックグラウンドでスプレッドシート取得（成功したら再レンダリング） */
 function startApp() {
   if (typeof Chart !== 'undefined') {
-    init();
+    render();   // 静的データで即描画
+    init();     // バックグラウンドでフェッチ → 成功時に再描画
   } else {
-    document.querySelector('script[src*="chart"]').addEventListener('load', init);
+    const chartScript = document.querySelector('script[src*="chart"]');
+    if (chartScript) {
+      chartScript.addEventListener('load', () => { render(); init(); });
+      chartScript.addEventListener('error', () => { /* Chart.js なし: init しない */ });
+    }
   }
 }
 if (document.readyState === 'loading') {
