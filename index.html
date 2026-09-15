@@ -1045,14 +1045,23 @@ function toJaDate(s) {
   return m ? `${m[1]}年${parseInt(m[2])}月` : s;
 }
 
-/* ── 売上推移表 → KPI配列を構築 ──
-   行番号(1-based) → 0-based index
-   列数式: colIdx = 5 + monthIdx * 2  (0-based, 8月=0)
-   bpoMon:row3  bpoUp:row21  bpoSpt:row24
-   bpoBdg:row26 bpoAct:row27 cliMgmt:row30 cxbCont:row33
-   cxbPrj:row37 othNew:row41 newBdg:row43  newAct:row44
-   netBdg:row48 netAct:row49 gpBdg:row60   gpAct:row61
-   opBdg:row63  opAct:row64                              */
+/* ── 予実管理表 → KPI配列を構築 ──
+   gvizがA1:AC80を返す際の0-basedインデックス（空行スキップ後）
+   列数式: colIdx = 5 + monthIdx * 2  (0-based, F列=8月=0)
+
+   ri=0  BPO月額 予算         ri=1  BPO月額 実績（bpoMon）
+   ri=18 BPO初期/UG 予算      ri=19 BPO初期/UG 実績（bpoUp）
+   ri=21 有期/スポット 予算    ri=22 有期/スポット 実績（bpoSpt）
+   ri=24 BPO事業小計 予算     ri=25 BPO事業小計 実績（bpoAct）
+   ri=27 クリ管 予算          ri=28 クリ管 実績（cliMgmt）
+   ri=30 CXB継続 予算         ri=31 CXB継続 実績（cxbCont）
+   ri=33 CXB本支援 予算       ri=35 CXB本支援 実績_月額（cxbPrj）
+   ri=37 その他新規 予算      ri=39 その他新規 実績（othNew）
+   ri=41 新規事業小計 予算    ri=42 新規事業小計 実績（newAct）
+   ri=46 純売上高 予算（netBdg=row52）
+   ri=47 純売上高 実績（netAct=row53）
+   ri=58 売上総利益 予算      ri=59 売上総利益 実績
+   ri=61 営業利益 予算        ri=62 営業利益 実績            */
 function buildKpiFromSalesSheet(rows) {
   function getNum(rowIdx, monthIdx) {
     const r = rows[rowIdx];
@@ -1063,10 +1072,10 @@ function buildKpiFromSalesSheet(rows) {
     return isNaN(n) ? null : Math.round(n);
   }
   const ROW = {
-    bpoMon:2, bpoUp:20, bpoSpt:23, bpoBdg:25, bpoAct:26,
-    cliMgmt:29, cxbCont:32, cxbPrj:36, othNew:40,
-    newBdg:42, newAct:43, netBdg:47, netAct:48,
-    gpBdg:59, gpAct:60, opBdg:62, opAct:63
+    bpoMon:1,  bpoUp:19, bpoSpt:22, bpoBdg:24, bpoAct:25,
+    cliMgmt:28, cxbCont:31, cxbPrj:35, othNew:39,
+    newBdg:41, newAct:42, netBdg:46, netAct:47,
+    gpBdg:58,  gpAct:59, opBdg:61,  opAct:62
   };
   for (let i = 0; i < 12; i++) {
     const g = (key) => { const v = getNum(ROW[key], i); return v; };
@@ -1254,7 +1263,7 @@ async function init() {
       fetchGvizJSONP(MRR_GID, 'A1:M20'),                            // MRRサマリー
       fetchGvizJSONP(MRR_GID, 'A17:G300'),                          // サブスクレコード
       fetchGvizJSONP('【8期】有期型', 'A5:G300', true),              // 有期プランレコード
-      fetchGvizJSONP('【8期】売上推移表', 'A1:AC70', true),          // KPI推移表
+      fetchGvizJSONP('【8期】予実管理表', 'A1:AC80', true),          // KPI推移表（予実管理表 row52=純売上高予算 row53=実績）
     ]);
 
   let anyError = false;
