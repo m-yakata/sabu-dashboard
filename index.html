@@ -1094,11 +1094,13 @@ function buildKpiFromSalesSheet(rows) {
 }
 
 /* ── MRR シートサマリー行（A1:M20）→ 新規/既存MRR・解約率 ──
-   Row3(idx2): 新規MRR    B-M → monthIdx 0-11
-   Row4(idx3): 新規件数
-   Row5(idx4): 既存MRR
-   Row6(idx5): 既存件数
-   Row14(idx13): 解約率(%)                               */
+   Row3(idx2):  新規MRR    B-M → monthIdx 0-11
+   Row4(idx3):  新規件数
+   Row5(idx4):  既存MRR
+   Row6(idx5):  既存件数
+   Row11(idx10): 解約MRR（負値）
+   Row12(idx11): 解約件数
+   Row14(idx13): 解約率(%)                              */
 function buildMrrSummary(rows) {
   function getVal(rowIdx, monthIdx) {
     const r = rows[rowIdx];
@@ -1109,13 +1111,27 @@ function buildMrrSummary(rows) {
   }
   for (let i = 0; i < 12; i++) {
     const nm = getVal(2, i);
-    if (nm !== null) newMrr[i]    = Math.round(parseFloat(nm)) || 0;
+    if (nm !== null) newMrr[i]      = Math.round(parseFloat(nm)) || 0;
     const nc = getVal(3, i);
-    if (nc !== null) newMrrCnt[i] = Math.round(parseFloat(nc)) || 0;
+    if (nc !== null) newMrrCnt[i]   = Math.round(parseFloat(nc)) || 0;
     const em = getVal(4, i);
     if (em !== null) existMrr[i]    = Math.round(parseFloat(em)) || 0;
     const ec = getVal(5, i);
     if (ec !== null) existMrrCnt[i] = Math.round(parseFloat(ec)) || 0;
+    /* 解約MRR: スプレッドシートでは負値（-1290000）で格納されている */
+    const cm = getVal(10, i);
+    if (cm !== null) {
+      const v = Math.round(parseFloat(cm)) || 0;
+      churnMrr[i]    = v;           // 負値のまま格納
+      churnMrrAbs[i] = Math.abs(v);
+    }
+    /* 解約件数 */
+    const ck = getVal(11, i);
+    if (ck !== null) {
+      const cnt = Math.round(parseFloat(String(ck).replace(/件/g,''))) || 0;
+      churnCnt[i]  = cnt;
+      ckyakuCnt[i] = cnt;
+    }
     const cr = getVal(13, i);
     if (cr !== null) {
       const pct = parseFloat(String(cr).replace('%',''));
@@ -1198,12 +1214,12 @@ function computeChurnStats() {
   LONG_M.forEach((month, i) => {
     const recs = CHURN_RECORDS.filter(r => r.m === month);
     const kyakuRecs = recs.filter(r => r.type === '解約');
-    churnCnt[i]     = recs.length;
-    churnCntM[i]    = recs.length;
-    ckyakuCnt[i]    = kyakuRecs.length;
-    churnMrrAbs[i]  = recs.reduce((s, r) => s + r.mrr, 0);
+    churnCnt[i]     = kyakuRecs.length;   // 解約件数をバッジに使用
+    churnCntM[i]    = recs.length;         // 全レコード数（内部用）
+    ckyakuCnt[i]    = kyakuRecs.length;   // 顧客解約件数
+    churnMrrAbs[i]  = kyakuRecs.reduce((s, r) => s + r.mrr, 0);  // 解約のみ合算
     churnMrr[i]     = -churnMrrAbs[i];
-    churnUnitAvg[i] = recs.length > 0 ? Math.round(churnMrrAbs[i] / recs.length) : 0;
+    churnUnitAvg[i] = kyakuRecs.length > 0 ? Math.round(churnMrrAbs[i] / kyakuRecs.length) : 0;
   });
 }
 
@@ -1296,14 +1312,14 @@ async function init() {
   if (anyError) {
     const banner = document.getElementById('fetchErrorBanner');
     if (banner) { banner.hidden = false; banner.textContent = '⚠ シートの一部取得失敗。前回データを一部使用中'; }
-  } else {
-    /* 全取得成功 → 再レンダリング */
-    render();
   }
+  /* 成功/部分失敗いずれも最新データで再レンダリング */
+  render();
   } catch(fatal) {
     console.error('[Dashboard] 予期しないエラー:', fatal);
     CHURN_RECORDS = CHURN_RECORDS_FALLBACK;
     computeChurnStats();
+    render();
   }
 }
 
