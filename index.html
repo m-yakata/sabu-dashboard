@@ -398,6 +398,31 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
 .dl-pct    { font-family: var(--font-num); font-size: 12px; font-weight: 600; color: var(--c-text-primary); }
 .dl-amt    { font-family: var(--font-num); font-size: 10px; color: var(--c-text-muted); font-variant-numeric: tabular-nums; }
 
+/* ── Chart area tabs (売上/総利益/営業利益) ── */
+.chart-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+.ctab {
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-text-secondary);
+  cursor: pointer;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  background: none;
+  user-select: none;
+}
+.ctab:hover { color: var(--c-text-primary); }
+.ctab-sales.active { color: var(--c-teal);   border-bottom-color: var(--c-teal);   font-weight: 700; }
+.ctab-gp.active    { color: #D97706;          border-bottom-color: #D97706;          font-weight: 700; }
+.ctab-op.active    { color: #2563EB;          border-bottom-color: #2563EB;          font-weight: 700; }
+
 /* ── Breakdown tabs ── */
 .breakdown-tabs { display: flex; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; }
 .btab {
@@ -452,6 +477,8 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
 .year-table .r-sub td { color: var(--c-text-secondary); font-size: 10.5px; }
 .year-table .sep td   { height: 4px; border: none; background: var(--c-bg); padding: 0; }
 .year-table .c-cur    { background: rgba(12,167,160,0.05) !important; border-left: 2px solid var(--c-teal); border-right: 2px solid var(--c-teal); }
+.year-table .c-ttl    { background: var(--c-bg-alt, rgba(0,0,0,0.03)) !important; font-weight: 700 !important; border-left: 2px solid var(--c-border); }
+.year-table th.c-ttl  { background: var(--c-bg-alt, rgba(0,0,0,0.03)) !important; font-weight: 700 !important; border-left: 2px solid var(--c-border); color: var(--c-text-secondary); }
 .pos { color: var(--c-green); }
 .neg { color: var(--c-red); }
 .muted-cell { color: var(--c-text-muted) !important; }
@@ -597,13 +624,20 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
     <div class="bottom-grid">
       <!-- Left -->
       <div class="left-col">
+        <!-- チャートタブ -->
+        <div class="chart-tabs" id="chartTabs">
+          <div class="ctab ctab-sales active" id="ctabSales" onclick="switchChartTab('sales')">売上（純売上高）</div>
+          <div class="ctab ctab-gp" id="ctabGp" onclick="switchChartTab('gp')">総利益</div>
+          <div class="ctab ctab-op" id="ctabOp" onclick="switchChartTab('op')">営業利益</div>
+        </div>
+
         <div class="card">
           <div class="card-hd">
             <div>
-              <div class="card-title">月次売上推移（純売上高）</div>
+              <div class="card-title" id="barChartTitle">月次売上推移（純売上高）</div>
               <div class="card-sub">単位：万円　／　第8期 2026年8月〜2027年7月</div>
             </div>
-            <div class="chart-legend">
+            <div class="chart-legend" id="barChartLegend">
               <div class="legend-item"><div class="l-dot" style="background:#0CA7A0"></div>月額サービス</div>
               <div class="legend-item"><div class="l-dot" style="background:#7C5FAD"></div>単発・有期</div>
               <div class="legend-item"><div class="l-dot" style="background:rgba(12,167,160,0.4)"></div>着地見込</div>
@@ -615,7 +649,7 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
 
         <div class="card">
           <div class="card-hd">
-            <div class="card-title">全社売上 月次サマリー</div>
+            <div class="card-title" id="yearTableTitle">全社売上 月次サマリー</div>
             <div class="card-sub">単位：万円</div>
           </div>
           <div class="year-table-wrap">
@@ -861,6 +895,20 @@ const ckyakuCnt  = [13,12,0,0,0,0,0,0,0,0,0,0];
 /* ── 確定実績の月数（0-indexed: 0=Aug2026が確定） ── */
 const ACTUAL_COUNT = 3;
 
+/* ── 通期累計（【8期】予実管理表 AE列 実値） ── */
+const AE = {
+  netBdg:  501669394,   // P1000 予算  row52
+  netAct:  368891088,   // P1000 実績  row53
+  gpBdg:   236530318,   // P2000 予算  row69
+  gpAct:    22624766,   // P2000 実績  row70
+  opBdg:    19907191,   // P4000 予算  row72
+  opAct:     2612080,   // P4000 実績  row73
+  bpoBdg:  342429394,   // BPO小計 予算 row29
+  bpoAct:  298572038,   // BPO小計 実績 row30
+  cxbAct:   32830000,   // CXB合計 実績 (row37+row40+row41)
+  newAct:   70590000,   // 新規小計 実績 row48
+};
+
 /* ── 解約推移データ（【8期】MRRシート） ── */
 const churnMrrAbs  = [1290000,1270000,0,0,0,0,0,0,0,0,0,0]; // 解約MRR絶対値
 const churnCntM  = [17,16,2,2,0,0,0,0,0,0,0,0];            // 解約件数
@@ -955,6 +1003,10 @@ const CHURN_RECORDS = [
 const man    = v  => Math.round(v / 10000);
 const fmt    = v  => Math.abs(v).toLocaleString('ja-JP');
 const fmtPct = p  => (p >= 0 ? '+' : '') + p.toFixed(1) + '%';
+// マイナス値を ▲ 付きで表示（予算欄など）
+const fmtSgn = v  => v < 0
+  ? `<span style="color:var(--c-red);font-weight:600">▲${fmt(v)}</span>`
+  : fmt(v);
 // 予算比計算：予算がマイナスの場合は ABS(予算) を分母にして改善度を計算
 // 良し悪し判定は「実績が予算を上回ったか」で統一
 const pctOf  = (a,b) => b ? (a - b) / Math.abs(b) * 100 : 0;
@@ -968,6 +1020,7 @@ const sptSum = i  => bpoUp[i]  + bpoSpt[i]  + cxbPrj[i] + othNew[i];
 ══════════════════════════════════════════════════ */
 let curMon = 0;
 let curTab = 'monthly';
+let chartTab = 'sales'; // 'sales' | 'gp' | 'op'
 let barCI  = null;
 let donCI  = null;
 
@@ -1085,66 +1138,123 @@ function renderBar(selIdx) {
   const tick = dark ? '#7A8FA8' : '#6B7280';
   const surf = dark ? '#152030' : '#FFFFFF';
 
-  // 月額サービス：実績=ティール / 着地=薄ティール
-  const monBg = SHORT_M.map((_, i) =>
-    isAct(i) ? '#0CA7A0' : (dark ? 'rgba(12,167,160,0.35)' : 'rgba(12,167,160,0.42)')
-  );
-  // 単発・有期：実績=パープル / 着地=薄パープル
-  const sptBg = SHORT_M.map((_, i) =>
-    isAct(i) ? '#7C5FAD' : (dark ? 'rgba(124,95,173,0.35)' : 'rgba(124,95,173,0.42)')
-  );
-  // 選択月の枠線（上段＝単発の上端に表示）
-  const barBd = SHORT_M.map((_, i) => i === selIdx ? 'rgba(255,255,255,0.6)' : 'transparent');
+  let data, opts;
 
-  const data = {
-    labels: SHORT_M,
-    datasets: [
-      // ① 月額サービス（下段）
-      {
-        type: 'bar',
-        label: '月額サービス',
-        data: SHORT_M.map((_, i) => man(monSum(i))),
-        backgroundColor: monBg,
-        borderColor: 'transparent',
-        borderWidth: 0,
-        borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
-        borderSkipped: false,
-        stack: 'sales',
-        order: 2,
-      },
-      // ② 単発・有期（上段）
-      {
-        type: 'bar',
-        label: '単発・有期',
-        data: SHORT_M.map((_, i) => man(sptSum(i))),
-        backgroundColor: sptBg,
-        borderColor: barBd,
-        borderWidth: 1.5,
-        borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
-        borderSkipped: false,
-        stack: 'sales',
-        order: 2,
-      },
-      // ③ 予算ライン
-      {
-        type: 'line',
-        label: '予算',
-        data: netBdg.map(v => man(v)),
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59,130,246,0.06)',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointBackgroundColor: '#3B82F6',
-        pointBorderColor: surf,
-        pointBorderWidth: 1.5,
-        tension: 0,
-        stack: undefined,
-        order: 1,
-      },
-    ]
-  };
+  if (chartTab === 'sales') {
+    // ── 売上タブ: stacked bar (月額+単発) + 予算line ──
+    const monBg = SHORT_M.map((_, i) =>
+      isAct(i) ? '#0CA7A0' : (dark ? 'rgba(12,167,160,0.35)' : 'rgba(12,167,160,0.42)')
+    );
+    const sptBg = SHORT_M.map((_, i) =>
+      isAct(i) ? '#7C5FAD' : (dark ? 'rgba(124,95,173,0.35)' : 'rgba(124,95,173,0.42)')
+    );
+    const barBd = SHORT_M.map((_, i) => i === selIdx ? 'rgba(255,255,255,0.6)' : 'transparent');
 
-  const opts = {
+    data = {
+      labels: SHORT_M,
+      datasets: [
+        { type: 'bar', label: '月額サービス', data: SHORT_M.map((_, i) => man(monSum(i))),
+          backgroundColor: monBg, borderColor: 'transparent', borderWidth: 0,
+          borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
+          borderSkipped: false, stack: 'sales', order: 2 },
+        { type: 'bar', label: '単発・有期', data: SHORT_M.map((_, i) => man(sptSum(i))),
+          backgroundColor: sptBg, borderColor: barBd, borderWidth: 1.5,
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+          borderSkipped: false, stack: 'sales', order: 2 },
+        { type: 'line', label: '予算', data: netBdg.map(v => man(v)),
+          borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.06)',
+          borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#3B82F6',
+          pointBorderColor: surf, pointBorderWidth: 1.5, tension: 0, stack: undefined, order: 1 },
+      ]
+    };
+    opts = buildBarOpts(dark, grid, tick, surf, true, items => {
+      const i = items[0].dataIndex;
+      return `  合計：${fmt(man(monSum(i)) + man(sptSum(i)))} 万円`;
+    });
+
+    // 凡例更新
+    document.getElementById('barChartLegend').innerHTML = `
+      <div class="legend-item"><div class="l-dot" style="background:#0CA7A0"></div>月額サービス</div>
+      <div class="legend-item"><div class="l-dot" style="background:#7C5FAD"></div>単発・有期</div>
+      <div class="legend-item"><div class="l-dot" style="background:rgba(12,167,160,0.4)"></div>着地見込</div>
+      <div class="legend-item"><div class="l-line"></div>予算</div>`;
+
+  } else if (chartTab === 'gp') {
+    // ── 総利益タブ: single bar (amber) + 予算line ──
+    const gpColor = '#F59E0B';
+    const gpActColor  = SHORT_M.map((_, i) =>
+      i < ACTUAL_COUNT ? gpColor : (dark ? 'rgba(245,158,11,0.35)' : 'rgba(245,158,11,0.42)')
+    );
+    const barBd = SHORT_M.map((_, i) => i === selIdx ? 'rgba(255,255,255,0.6)' : 'transparent');
+
+    data = {
+      labels: SHORT_M,
+      datasets: [
+        { type: 'bar', label: '総利益',
+          data: SHORT_M.map((_, i) => {
+            const v = gpAct[i];
+            return v !== null ? man(v) : 0;
+          }),
+          backgroundColor: gpActColor, borderColor: barBd, borderWidth: 1.5,
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4 },
+          borderSkipped: false, stack: 'gp', order: 2 },
+        { type: 'line', label: '予算', data: gpBdg.map(v => man(v)),
+          borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.06)',
+          borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#3B82F6',
+          pointBorderColor: surf, pointBorderWidth: 1.5, tension: 0, stack: undefined, order: 1 },
+      ]
+    };
+    opts = buildBarOpts(dark, grid, tick, surf, false, null);
+
+    document.getElementById('barChartLegend').innerHTML = `
+      <div class="legend-item"><div class="l-dot" style="background:${gpColor}"></div>総利益</div>
+      <div class="legend-item"><div class="l-dot" style="background:rgba(245,158,11,0.4)"></div>着地見込</div>
+      <div class="legend-item"><div class="l-line"></div>予算</div>`;
+
+  } else {
+    // ── 営業利益タブ: single bar (blue) + 予算line ──
+    const opColor = '#2563EB';
+    const opActColor = SHORT_M.map((_, i) =>
+      i < ACTUAL_COUNT ? opColor : (dark ? 'rgba(37,99,235,0.35)' : 'rgba(37,99,235,0.42)')
+    );
+    const barBd = SHORT_M.map((_, i) => i === selIdx ? 'rgba(255,255,255,0.6)' : 'transparent');
+
+    data = {
+      labels: SHORT_M,
+      datasets: [
+        { type: 'bar', label: '営業利益',
+          data: SHORT_M.map((_, i) => {
+            const v = opAct[i];
+            return v !== null ? man(v) : 0;
+          }),
+          backgroundColor: opActColor, borderColor: barBd, borderWidth: 1.5,
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4 },
+          borderSkipped: false, stack: 'op', order: 2 },
+        { type: 'line', label: '予算', data: opBdg.map(v => man(v)),
+          borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.06)',
+          borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#3B82F6',
+          pointBorderColor: surf, pointBorderWidth: 1.5, tension: 0, stack: undefined, order: 1 },
+      ]
+    };
+    opts = buildBarOpts(dark, grid, tick, surf, false, null);
+
+    document.getElementById('barChartLegend').innerHTML = `
+      <div class="legend-item"><div class="l-dot" style="background:${opColor}"></div>営業利益</div>
+      <div class="legend-item"><div class="l-dot" style="background:rgba(37,99,235,0.4)"></div>着地見込</div>
+      <div class="legend-item"><div class="l-line"></div>予算</div>`;
+  }
+
+  // チャートタイトル更新
+  const titleMap = { sales: '月次売上推移（純売上高）', gp: '月次総利益推移', op: '月次営業利益推移' };
+  document.getElementById('barChartTitle').textContent = titleMap[chartTab];
+
+  const ctx = document.getElementById('barChart').getContext('2d');
+  if (barCI) { barCI.destroy(); barCI = null; }
+  barCI = new Chart(ctx, { type: 'bar', data, options: opts });
+}
+
+function buildBarOpts(dark, grid, tick, surf, stacked, footerFn) {
+  return {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
@@ -1162,23 +1272,15 @@ function renderBar(selIdx) {
             if (c.dataset.label === '予算') return ` 予算：${fmt(c.raw)} 万円`;
             return ` ${c.dataset.label}：${fmt(c.raw)} 万円`;
           },
-          footer: items => {
-            const i = items[0].dataIndex;
-            const total = man(monSum(i)) + man(sptSum(i));
-            return `  合計：${fmt(total)} 万円`;
-          }
+          footer: footerFn ? footerFn : undefined,
         }
       }
     },
     scales: {
-      x: { stacked: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Inter', size: 11 } } },
-      y: { stacked: true, grid: { color: grid }, ticks: { color: tick, font: { family: 'Inter', size: 10 }, callback: v => fmt(v) } }
+      x: { stacked, grid: { color: grid }, ticks: { color: tick, font: { family: 'Inter', size: 11 } } },
+      y: { stacked, grid: { color: grid }, ticks: { color: tick, font: { family: 'Inter', size: 10 }, callback: v => fmt(v) } }
     }
   };
-
-  const ctx = document.getElementById('barChart').getContext('2d');
-  if (barCI) { barCI.data = data; barCI.options = opts; barCI.update(); }
-  else barCI = new Chart(ctx, { type: 'bar', data, options: opts });
 }
 
 /* ══════════════════════════════════════════════════
@@ -1286,57 +1388,148 @@ function renderBreakdown(i) {
 }
 window.switchTab = t => { curTab = t; renderBreakdown(curMon); };
 
+window.switchChartTab = t => {
+  chartTab = t;
+  // タブUI更新
+  document.getElementById('ctabSales').className = 'ctab ctab-sales' + (t === 'sales' ? ' active' : '');
+  document.getElementById('ctabGp').className    = 'ctab ctab-gp'    + (t === 'gp'    ? ' active' : '');
+  document.getElementById('ctabOp').className    = 'ctab ctab-op'    + (t === 'op'    ? ' active' : '');
+  renderBar(curMon);
+  renderYearTable(curMon);
+};
+
 /* ══════════════════════════════════════════════════
    YEAR TABLE
 ══════════════════════════════════════════════════ */
 function renderYearTable(selIdx) {
-  const mkCells = (fn, cls) => SHORT_M.map((_, i) => {
-    const v   = fn(i);
+  const mkCells = (fn) => SHORT_M.map((_, i) => {
     const cur = i === selIdx ? ' c-cur' : '';
-    return `<td class="${cls}${cur}">${v}</td>`;
+    return `<td class="${cur}">${fn(i)}</td>`;
   }).join('');
 
-  const diffCells = SHORT_M.map((_, i) => {
-    const d   = man(netAct[i]) - man(netBdg[i]);
+  // 予実差セル（月別）
+  const makeDiffMonthCells = (actArr, bdgArr) => SHORT_M.map((_, i) => {
+    const a = actArr[i], b = bdgArr[i];
     const cur = i === selIdx ? ' c-cur' : '';
-    const dc  = d >= 0 ? 'pos' : 'neg';
-    const label = d >= 0 ? `+${fmt(d)}` : `<span style="color:var(--c-red);font-weight:600">▲${fmt(Math.abs(d))}</span>`;
-    return `<td class="${dc}${cur}">${label}</td>`;
+    if (a === null || a === undefined) return `<td class="${cur}"><span class="muted-cell">--</span></td>`;
+    const d = man(a) - man(b);
+    const dc = d >= 0 ? 'pos' : 'neg';
+    const lbl = d >= 0 ? `+${fmt(d)}` : `<span style="color:var(--c-red);font-weight:600">▲${fmt(Math.abs(d))}</span>`;
+    return `<td class="${dc}${cur}">${lbl}</td>`;
   }).join('');
 
+  // 通期累計の差分セル
+  const diffTtlCell = (aeAct, aeBdg) => {
+    const d = man(aeAct) - man(aeBdg);
+    const dc = d >= 0 ? 'pos' : 'neg';
+    const lbl = d >= 0 ? `+${fmt(d)}` : `<span style="color:var(--c-red);font-weight:600">▲${fmt(Math.abs(d))}</span>`;
+    return `<td class="${dc} c-ttl">${lbl}</td>`;
+  };
+
+  const colCount = SHORT_M.length + 2;
   const thead = `<thead><tr><th></th>${SHORT_M.map((m,i) =>
     `<th class="${i===selIdx?'c-cur':''}">${isAct(i)?m:`<span class="muted-cell">${m}</span>`}</th>`
-  ).join('')}</tr></thead>`;
+  ).join('')}<th class="c-ttl">通期累計</th></tr></thead>`;
 
-  const rows = [
-    { lbl:'予算',         fn: i => fmt(man(netBdg[i])),  cls:'r-bdg' },
-    { lbl:'実績・着地見込', fn: i => {
-        const s = isAct(i) ? '' : ' muted-cell';
-        return `<span class="${s.trim()}">${fmt(man(netAct[i]))}</span>`;
-      }, cls:'r-act', html:true },
-    { lbl:'予実差',       special:'diff',               cls:'r-dif' },
-    null, // separator
-    { lbl:'BPO事業',    fn: i => fmt(man(bpoAct[i])),                                    cls:'r-sub' },
-    { lbl:'CXB',        fn: i => fmt(man(cxbCont[i] + cxbPrj[i])),                        cls:'r-sub' },
-    { lbl:'その他新規',  fn: i => fmt(man(newAct[i] - cxbCont[i] - cxbPrj[i])),          cls:'r-sub' },
-  ];
+  let rows, tableTitleText;
+
+  if (chartTab === 'sales') {
+    tableTitleText = '全社売上 月次サマリー';
+    rows = [
+      {
+        lbl: '予算', cls: 'r-bdg',
+        cells: mkCells(i => fmt(man(netBdg[i]))),
+        ttl: `<td class="c-ttl">${fmt(man(AE.netBdg))}</td>`,
+      },
+      {
+        lbl: '実績・着地見込', cls: 'r-act',
+        cells: SHORT_M.map((_, i) => {
+          const cur = i === selIdx ? ' c-cur' : '';
+          const s = isAct(i) ? '' : ' muted-cell';
+          return `<td class="${cur}"><span class="${s.trim()}">${fmt(man(netAct[i]))}</span></td>`;
+        }).join(''),
+        ttl: `<td class="c-ttl" style="font-weight:700">${fmt(man(AE.netAct))}</td>`,
+      },
+      {
+        lbl: '予実差', cls: 'r-dif', special: 'diff',
+        actArr: netAct, bdgArr: netBdg,
+        aeAct: AE.netAct, aeBdg: AE.netBdg,
+      },
+      null,
+      {
+        lbl: 'BPO事業', cls: 'r-sub',
+        cells: mkCells(i => fmt(man(bpoAct[i]))),
+        ttl: `<td class="c-ttl">${fmt(man(AE.bpoAct))}</td>`,
+      },
+      {
+        lbl: 'CXB', cls: 'r-sub',
+        cells: mkCells(i => fmt(man(cxbCont[i] + cxbPrj[i]))),
+        ttl: `<td class="c-ttl">${fmt(man(AE.cxbAct))}</td>`,
+      },
+      {
+        lbl: 'その他新規', cls: 'r-sub',
+        cells: mkCells(i => fmt(man(newAct[i] - cxbCont[i] - cxbPrj[i]))),
+        ttl: `<td class="c-ttl">${fmt(man(AE.newAct - AE.cxbAct))}</td>`,
+      },
+    ];
+  } else if (chartTab === 'gp') {
+    tableTitleText = '全社総利益 月次サマリー';
+    rows = [
+      {
+        lbl: '予算', cls: 'r-bdg',
+        cells: mkCells(i => fmtSgn(man(gpBdg[i]))),
+        ttl: `<td class="c-ttl">${fmtSgn(man(AE.gpBdg))}</td>`,
+      },
+      {
+        lbl: '実績・着地見込', cls: 'r-act',
+        cells: SHORT_M.map((_, i) => {
+          const v = gpAct[i]; const cur = i === selIdx ? ' c-cur' : '';
+          const s = isAct(i) && v !== null ? '' : ' muted-cell';
+          return `<td class="${cur}"><span class="${s.trim()}">${v !== null ? fmt(man(v)) : '--'}</span></td>`;
+        }).join(''),
+        ttl: `<td class="c-ttl" style="font-weight:700">${fmt(man(AE.gpAct))}</td>`,
+      },
+      {
+        lbl: '予実差', cls: 'r-dif', special: 'diff',
+        actArr: gpAct, bdgArr: gpBdg,
+        aeAct: AE.gpAct, aeBdg: AE.gpBdg,
+      },
+    ];
+  } else {
+    tableTitleText = '全社営業利益 月次サマリー';
+    rows = [
+      {
+        lbl: '予算', cls: 'r-bdg',
+        cells: mkCells(i => fmtSgn(man(opBdg[i]))),
+        ttl: `<td class="c-ttl">${fmtSgn(man(AE.opBdg))}</td>`,
+      },
+      {
+        lbl: '実績・着地見込', cls: 'r-act',
+        cells: SHORT_M.map((_, i) => {
+          const v = opAct[i]; const cur = i === selIdx ? ' c-cur' : '';
+          const s = isAct(i) && v !== null ? '' : ' muted-cell';
+          return `<td class="${cur}"><span class="${s.trim()}">${v !== null ? fmt(man(v)) : '--'}</span></td>`;
+        }).join(''),
+        ttl: `<td class="c-ttl" style="font-weight:700">${fmt(man(AE.opAct))}</td>`,
+      },
+      {
+        lbl: '予実差', cls: 'r-dif', special: 'diff',
+        actArr: opAct, bdgArr: opBdg,
+        aeAct: AE.opAct, aeBdg: AE.opBdg,
+      },
+    ];
+  }
 
   const tbody = '<tbody>' + rows.map(r => {
-    if (!r) return `<tr class="sep"><td colspan="${SHORT_M.length + 1}"></td></tr>`;
+    if (!r) return `<tr class="sep"><td colspan="${colCount}"></td></tr>`;
     if (r.special === 'diff') {
-      return `<tr class="${r.cls}"><td>予実差</td>${diffCells}</tr>`;
+      return `<tr class="${r.cls}"><td>予実差</td>${makeDiffMonthCells(r.actArr, r.bdgArr)}${diffTtlCell(r.aeAct, r.aeBdg)}</tr>`;
     }
-    if (r.html) {
-      const cells = SHORT_M.map((_, i) => {
-        const cur = i === selIdx ? ' c-cur' : '';
-        return `<td class="${cur}">${r.fn(i)}</td>`;
-      }).join('');
-      return `<tr class="${r.cls}"><td>${r.lbl}</td>${cells}</tr>`;
-    }
-    return `<tr class="${r.cls}"><td>${r.lbl}</td>${mkCells(r.fn, '')}</tr>`;
+    return `<tr class="${r.cls}"><td>${r.lbl}</td>${r.cells}${r.ttl}</tr>`;
   }).join('') + '</tbody>';
 
   document.getElementById('yearTable').innerHTML = thead + tbody;
+  document.getElementById('yearTableTitle').textContent = tableTitleText;
   document.getElementById('updatedNote').textContent = '※ グラフ・表ともに着地見込ベース　最終更新 2026/09/11';
 }
 
