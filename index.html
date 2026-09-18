@@ -471,6 +471,10 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
   text-align: right; white-space: nowrap;
 }
 .year-table td:first-child { text-align: left; font-family: var(--font-jp); color: var(--c-text-secondary); font-size: 11.5px; }
+#leadSummaryTable th, #leadSummaryTable td { text-align: center !important; }
+#leadSummaryTable th:first-child, #leadSummaryTable td:first-child { text-align: left !important; }
+#orderSummaryTable th, #orderSummaryTable td { text-align: center !important; }
+#orderSummaryTable th:first-child, #orderSummaryTable td:first-child { text-align: left !important; }
 .year-table .r-bdg td { color: var(--c-text-muted); font-size: 10.5px; }
 .year-table .r-act td { font-weight: 600; }
 .year-table .r-dif td { font-size: 10.5px; }
@@ -488,56 +492,112 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
 
 /* ── Print / PDF ── */
 @media print {
-  @page { size: A4 landscape; margin: 14mm 12mm 12mm; }
+  @page { size: A4 landscape; margin: 10mm 10mm 10mm; }
 
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
 
-  body { background: #fff !important; display: block; }
+  html, body { width: 277mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+
   .sidebar { display: none !important; }
-  .main { margin-left: 0 !important; }
-  .topbar { display: none !important; }
-
-  .content { padding: 0 !important; }
+  .topbar  { display: none !important; }
+  .pdf-btn { display: none !important; }
+  .main    { margin-left: 0 !important; width: 100% !important; }
+  .content { padding: 8px 0 0 !important; width: 100% !important; }
 
   .print-header { display: flex !important; }
 
-  /* KPI: 5列 横並び */
-  .kpi-row {
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 8px !important;
-    margin-bottom: 10px !important;
-  }
-  .kpi-card {
+  /* ── アクティブなビューだけ表示 ── */
+  body[data-print-view="summary"]  #viewSummary  { display: block !important; }
+  body[data-print-view="newMrr"]   #viewNewMrr   { display: block !important; }
+  body[data-print-view="churn"]    #viewChurn     { display: block !important; }
+  body[data-print-view="orders"]   #viewOrders    { display: block !important; }
+
+  body[data-print-view="summary"]  #viewNewMrr,
+  body[data-print-view="summary"]  #viewChurn,
+  body[data-print-view="summary"]  #viewOrders  { display: none !important; }
+  body[data-print-view="newMrr"]   #viewSummary,
+  body[data-print-view="newMrr"]   #viewChurn,
+  body[data-print-view="newMrr"]   #viewOrders  { display: none !important; }
+  body[data-print-view="churn"]    #viewSummary,
+  body[data-print-view="churn"]    #viewNewMrr,
+  body[data-print-view="churn"]    #viewOrders  { display: none !important; }
+  body[data-print-view="orders"]   #viewSummary,
+  body[data-print-view="orders"]   #viewNewMrr,
+  body[data-print-view="orders"]   #viewChurn   { display: none !important; }
+
+  /* ── カード共通 ── */
+  .card {
     box-shadow: none !important;
     border: 1px solid #e5e7eb !important;
-    padding: 10px 12px !important;
     break-inside: avoid;
+    margin-top: 8px !important;
+    padding: 10px 12px !important;
+    width: 100% !important;
   }
-  .kpi-value { font-size: 18px !important; }
-  .kpi-label { font-size: 10px !important; }
-  .kpi-unit  { font-size: 11px !important; }
-  .kpi-meta  { margin-top: 4px !important; }
-  .kpi-row2  { font-size: 9.5px !important; }
-
-  /* チャート・テーブル */
-  .bottom-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin-top: 0 !important; }
-  .card { box-shadow: none !important; border: 1px solid #e5e7eb !important; break-inside: avoid; }
-  .left-col, .right-col { display: contents; }
-
-  /* テーブル文字小さく */
-  .year-table th, .year-table td { font-size: 8.5px !important; padding: 3px 5px !important; }
-  .bk-table th, .bk-table td    { font-size: 8.5px !important; padding: 3px 5px !important; }
   .card-title { font-size: 11px !important; }
   .card-sub   { font-size: 9px !important; }
+  .card-hd    { margin-bottom: 6px !important; }
 
-  /* ドーナツ・内訳 */
+  /* ── チャート ── */
+  .chart-wrap {
+    width: 100% !important;
+    height: 180px !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  .chart-wrap canvas {
+    width: 100% !important;
+    height: 180px !important;
+    max-width: 100% !important;
+  }
+
+  /* ── テーブル（位置ずれ防止）── */
+  .year-table-wrap,
+  [style*="overflow-x:auto"],
+  [style*="overflow-x: auto"] {
+    overflow: visible !important;
+    width: 100% !important;
+  }
+  .year-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+  }
+  .year-table th, .year-table td {
+    font-size: 8px !important;
+    padding: 3px 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+  }
+  #ordersListTable th, #ordersListTable td {
+    font-size: 8.5px !important;
+    white-space: normal !important;
+    word-break: break-all !important;
+  }
+
+  /* ── KPI ── */
+  .kpi-row {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+  .kpi-card  { box-shadow: none !important; border: 1px solid #e5e7eb !important; padding: 8px 10px !important; break-inside: avoid; }
+  .kpi-value { font-size: 16px !important; }
+  .kpi-label { font-size: 9px !important; }
+  .kpi-unit  { font-size: 10px !important; }
+  .kpi-meta  { margin-top: 3px !important; }
+  .kpi-row2  { font-size: 9px !important; }
+
+  /* ── グリッドレイアウト ── */
+  .bottom-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-top: 0 !important; }
+  .left-col, .right-col { display: contents; }
+
+  /* ── ドーナツ ── */
   .donut-inner { flex-direction: column !important; }
-  .donut-wrap  { width: 120px !important; height: 120px !important; }
+  .donut-wrap  { width: 110px !important; height: 110px !important; }
 
-  /* サイドバーのスペースなし */
-  .year-table-wrap { overflow: visible !important; }
-
-  .pdf-btn { display: none !important; }
+  /* ── legend ── */
+  .chart-legend { font-size: 9px !important; }
 }
 
 /* 印刷ヘッダー（通常時は非表示） */
@@ -585,6 +645,7 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
     <div class="nav-item active" id="navSummary" onclick="switchView('summary')"><span class="nav-icon">📊</span>売上サマリー</div>
     <div class="nav-item" id="navNewMrr" onclick="switchView('newMrr')"><span class="nav-icon">📈</span>新規MRR</div>
     <div class="nav-item" id="navChurn" onclick="switchView('churn')"><span class="nav-icon">📉</span>解約推移</div>
+    <div class="nav-item" id="navOrders" onclick="switchView('orders')"><span class="nav-icon">🤝</span>受注状況</div>
   </nav>
   <div class="sidebar-footer">
     データソース<br>
@@ -831,6 +892,105 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
     </div>
   </div><!-- /viewChurn -->
 
+  <!-- ═══ 受注状況 VIEW ═══ -->
+  <div id="viewOrders" style="display:none">
+
+    <!-- Chart 1: 新規リード件数の推移 -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">新規リード件数の推移</div>
+          <div class="card-sub">単位：件　／　第8期 2026年8月〜2027年7月</div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="l-dot" style="background:var(--c-teal)"></div>新規獲得数（実績）</div>
+          <div class="legend-item"><div class="l-line" style="background:#94A3B8"></div>予算</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="leadChart"></canvas></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-hd"><div class="card-title">新規リード件数 月次サマリー</div></div>
+      <div style="overflow-x:auto">
+        <table class="year-table" id="leadSummaryTable" style="min-width:700px;margin-top:4px;table-layout:fixed;width:100%">
+          <colgroup>
+            <col style="width:8%">
+            <col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%">
+            <col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%">
+            <col style="width:6%">
+          </colgroup>
+          <thead><tr>
+            <th>2026年〜</th>
+            <th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th>
+            <th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>5月</th><th>6月</th><th>7月</th>
+            <th style="background:rgba(12,167,160,0.08);color:rgba(12,167,160,0.9)">累計</th>
+          </tr></thead>
+          <tbody id="leadSummaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Chart 2: 当月総受注金額 -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">当月総受注金額</div>
+          <div class="card-sub">単位：万円　／　第8期 2026年8月〜2027年7月　　※受注金額 ＝ 初期費用 ＋ 受注月額</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="orderChart"></canvas></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-hd"><div class="card-title">受注 月次サマリー</div></div>
+      <div style="overflow-x:auto">
+        <table class="year-table" id="orderSummaryTable" style="min-width:700px;margin-top:4px;table-layout:fixed;width:100%">
+          <colgroup>
+            <col style="width:8%">
+            <col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%">
+            <col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%">
+            <col style="width:6%">
+          </colgroup>
+          <thead><tr>
+            <th>2026年〜</th>
+            <th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th>
+            <th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>5月</th><th>6月</th><th>7月</th>
+            <th style="background:rgba(12,167,160,0.08);color:rgba(12,167,160,0.9)">累計</th>
+          </tr></thead>
+          <tbody id="orderSummaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 受注一覧 -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-hd">
+        <div class="card-title" id="ordersListTitle">受注一覧</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="year-table" id="ordersListTable" style="width:100%;table-layout:fixed">
+          <colgroup>
+            <col style="width:20%">
+            <col style="width:20%">
+            <col style="width:20%">
+            <col style="width:20%">
+            <col style="width:20%">
+          </colgroup>
+          <thead><tr>
+            <th style="text-align:left">開始月</th>
+            <th style="text-align:left">取引先名</th>
+            <th style="text-align:left">区分</th>
+            <th style="text-align:left">プラン</th>
+            <th style="text-align:right">月額</th>
+          </tr></thead>
+          <tbody id="ordersListBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /viewOrders -->
+
   </div><!-- /content -->
 </main>
 
@@ -1040,14 +1200,33 @@ sel.addEventListener('change', () => { curMon = +sel.value; render(); });
    PDF EXPORT
 ══════════════════════════════════════════════════ */
 function exportPDF() {
-  // 印刷ヘッダーに月と日付を設定
   const selIdx = parseInt(document.getElementById('monthSel').value);
   const monthLabel = LONG_M[selIdx];
   const today = new Date();
   const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日 出力`;
   document.getElementById('printHeaderRight').innerHTML =
     `対象月：${monthLabel}<br>${dateStr}`;
+
+  // 現在のビューをbodyに記録してprint CSSで制御
+  document.body.setAttribute('data-print-view', currentView || 'summary');
+
+  // チャートをprint用に一時リサイズ（位置ずれ防止）
+  const charts = [leadCI, orderCI, newMrrCI, churnCI, churnMrrCI].filter(Boolean);
+  const originalSizes = charts.map(c => ({
+    chart: c,
+    w: c.canvas.style.width,
+    h: c.canvas.style.height,
+  }));
+
+  // Chart.js に現サイズで再描画させる
+  charts.forEach(c => c.resize());
+
   window.print();
+
+  // 印刷後に属性を削除
+  setTimeout(() => {
+    document.body.removeAttribute('data-print-view');
+  }, 1000);
 }
 
 /* ══════════════════════════════════════════════════
@@ -1567,6 +1746,7 @@ function render() {
   renderYearTable(curMon);
   renderChurn(curMon);
   renderNewMrr(curMon);
+  if (currentView === 'orders') renderOrders(curMon);
 }
 
 /* ══════════════════════════════════════════════════
@@ -1576,19 +1756,22 @@ let currentView = 'summary';
 let churnBarCI = null;
 let newMrrBarCI = null;
 
-const VIEW_TITLES = { summary: '売上サマリー', newMrr: '新規MRR', churn: '解約推移' };
+const VIEW_TITLES = { summary: '売上サマリー', newMrr: '新規MRR', churn: '解約推移', orders: '受注状況' };
 
 function switchView(v) {
   currentView = v;
   document.getElementById('viewSummary').style.display = v === 'summary' ? '' : 'none';
   document.getElementById('viewNewMrr').style.display  = v === 'newMrr'  ? '' : 'none';
   document.getElementById('viewChurn').style.display   = v === 'churn'   ? '' : 'none';
+  document.getElementById('viewOrders').style.display  = v === 'orders'  ? '' : 'none';
   document.getElementById('topbarTitle').textContent   = VIEW_TITLES[v] || v;
   document.getElementById('navSummary').className = 'nav-item' + (v === 'summary' ? ' active' : '');
   document.getElementById('navNewMrr').className  = 'nav-item' + (v === 'newMrr'  ? ' active' : '');
   document.getElementById('navChurn').className   = 'nav-item' + (v === 'churn'   ? ' active' : '');
+  document.getElementById('navOrders').className  = 'nav-item' + (v === 'orders'  ? ' active' : '');
   if (v === 'churn')  renderChurn(curMon);
   if (v === 'newMrr') renderNewMrr(curMon);
+  if (v === 'orders') renderOrders(curMon);
 }
 
 /* ══════════════════════════════════════════════════
@@ -2019,6 +2202,396 @@ function renderFixedTermTable(i) {
     </tr>`;
   }).join('');
   document.getElementById('fixedTermBody').innerHTML = rows;
+}
+
+/* ══════════════════════════════════════════════════
+   受注状況 DATA
+   Source: KOUS一覧シート（成約 & KO日時 >= 2026-08-01）
+          + 【8期】SALES（新規リード・広告宣伝費・受注）
+   Last sync: 2026/09/18
+══════════════════════════════════════════════════ */
+
+/* ── 新規リード件数 ── */
+// 【8期】SALES Row2: 8月〜7月
+const leadAct = [41, 96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+/* ── 広告宣伝費（円→千円表示）── */
+// 【8期】SALES Row3: 円単位。表示時は÷1000で千円換算
+const adSpendK = [774506, null, null, null, null, null, null, null, null, null, null, null];
+
+/* ── 受注サマリー（月別）── */
+// 【8期】SALES Row5-15: 受注金額 = 初期費用 + 受注月額
+const ordCnt   = [9,  9,  7,  2,  5,  1,  0, 0, 0, 0, 0, 0];
+const ordAmt   = [3480000, 4640000, 4560000, 800000, 3250000, 850000, 0, 0, 0, 0, 0, 0];
+const ordBpo   = [1000000, 1170000,  350000,       0,       0,       0, 0, 0, 0, 0, 0, 0];
+const ordCxb   = [  80000, 2050000, 3050000,  800000, 3250000,  550000, 0, 0, 0, 0, 0, 0];
+const ordOth   = [2400000, 1420000, 1160000,       0,       0,  300000, 0, 0, 0, 0, 0, 0];
+// 受注件数（区分別）SALES Row6/7/8
+const ordBpoCnt = [8, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const ordCxbCnt = [1, 4, 6, 2, 5, 1, 0, 0, 0, 0, 0, 0];
+const ordOthCnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+/* ── 受注一覧（個票）── */
+// SALESシート 個票: BPO(A-F列)・CXB(H-M列)・その他(O-T列) Row19〜
+const KOUS_RECORDS = [
+  // ── BPO ──
+  {month:'2026年8月',  type:'既存', company:'こばやし歯科医院',                                             plan:'【BPO】伴走型プラン',                   monthly:150000, section:'BPO'},
+  {month:'2026年8月',  type:'既存', company:'医療法人社団栗林歯科医院',                                     plan:'【HP制作】保守管理',                     monthly:30000,  section:'BPO'},
+  {month:'2026年8月',  type:'既存', company:'若林歯科',                                                     plan:'【HP制作】保守管理',                     monthly:10000,  section:'BPO'},
+  {month:'2026年8月',  type:'既存', company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科',          plan:'【RPO】PROプラン',                       monthly:140000, section:'BPO'},
+  {month:'2026年8月',  type:'既存', company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科',          plan:'【クリニック管理くん】BPOセットプラン', monthly:10000,  section:'BPO'},
+  {month:'2026年8月',  type:'既存', company:'医療法人社団誓栄会 千賀デンタルクリニック',                    plan:'【クリニック管理くん】BPOセットプラン', monthly:50000,  section:'BPO'},
+  {month:'2026年8月',  type:'新規', company:'一般社団法人デンタルＡＩ',                                     plan:'【学会】パッケージプラン',               monthly:100000, section:'BPO'},
+  {month:'2026年8月',  type:'新規', company:'医療法人怜生会 慶歯科医院',                                    plan:'【RPO】採用診断',                        monthly:0,      section:'BPO'},
+  {month:'2026年9月',  type:'既存', company:'KPMGコンサルティング株式会社',                                 plan:'【HP制作】専門LP',                       monthly:0,      section:'BPO'},
+  {month:'2026年9月',  type:'既存', company:'KPMGコンサルティング株式会社',                                 plan:'【HP制作】専門LP',                       monthly:0,      section:'BPO'},
+  {month:'2026年9月',  type:'既存', company:'Well-Being DENTAL CLINIC',                                     plan:'【HP制作】保守管理',                     monthly:10000,  section:'BPO'},
+  {month:'2026年9月',  type:'既存', company:'医療法人怜生会 慶歯科医院',                                    plan:'【RPO】PROプラン',                       monthly:250000, section:'BPO'},
+  {month:'2026年9月',  type:'新規', company:'あかおぎ歯科クリニック',                                       plan:'【RPO】採用診断',                        monthly:0,      section:'BPO'},
+  {month:'2026年10月', type:'新規', company:'THE ROPPONGI CLINIC',                                          plan:'【RPO】PROプラン',                       monthly:150000, section:'BPO'},
+  // ── CXB ──
+  {month:'2026年8月',  type:'既存', company:'芝山デンタルクリニック',                                       plan:'【CX】ブートキャンプ(継続支援)',         monthly:80000,  section:'CXB'},
+  {month:'2026年9月',  type:'既存', company:'清水歯科医院',                                                 plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
+  {month:'2026年9月',  type:'新規', company:'リーフ総合歯科/クローバー歯科/One Dental Clinic星ヶ丘',        plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
+  {month:'2026年9月',  type:'既存', company:'医療法人西山歯科',                                             plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
+  {month:'2026年9月',  type:'新規', company:'医療法人社団新心会',                                           plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
+  {month:'2026年10月', type:'既存', company:'医療法人社団GiFT やぎ歯科医院',                                plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
+  {month:'2026年10月', type:'新規', company:'医療法人社団高松歯科医院',                                     plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
+  {month:'2026年10月', type:'新規', company:'UMEMOTO DENTAL OFFICE',                                        plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
+  {month:'2026年10月', type:'既存', company:'若林歯科',                                                     plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
+  {month:'2026年10月', type:'新規', company:'医療法人築明会 つきやま歯科医院　井尻本院',                    plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
+  {month:'2026年10月', type:'既存', company:'医療法人社団 カワサキ 歯科川崎医院',                           plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
+  {month:'2026年11月', type:'既存', company:'たかす歯科クリニック',                                         plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
+  {month:'2026年11月', type:'既存', company:'リョウジ歯科',                                                 plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
+  {month:'2026年12月', type:'既存', company:'医療法人啓正会 須賀川みらい歯科クリニック',                    plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
+  {month:'2026年12月', type:'既存', company:'医療法人社団同優会 関原デンタルオフィス',                      plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
+  {month:'2026年12月', type:'既存', company:'医療法人こうの歯科',                                           plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
+  {month:'2026年12月', type:'新規', company:'はばたき歯科おとなこども歯科クリニック',                       plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
+  {month:'2026年12月', type:'新規', company:'医療法人祐愛会 西村歯科',                                      plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
+  {month:'2027年1月',  type:'新規', company:'医療法人社団栄昂会 戸塚駅前トリコ歯科',                        plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
+  // ── その他 ──
+  {month:'2026年8月',  type:'既存', company:'デンタルサポート株式会社',                                     plan:'【メディア】セミナー支援プラン',         monthly:1000000, section:'その他'},
+  {month:'2026年8月',  type:'既存', company:'合同会社growing up',                                           plan:'【メディア】特別PJ(買切)',               monthly:1400000, section:'その他'},
+  {month:'2026年9月',  type:'新規', company:'髙屋歯科医院',                                                 plan:'【BPO】経営分析プラン',                 monthly:180000,  section:'その他'},
+  {month:'2026年9月',  type:'既存', company:'加藤総合歯科・矯正歯科',                                       plan:'【BPO】経営分析プラン',                 monthly:790000,  section:'その他'},
+  {month:'2026年9月',  type:'新規', company:'医療法人社団LOVE&TEETH DENTAL TANIZAWA',                       plan:'【BPO】経営分析プラン',                 monthly:0,       section:'その他'},
+  {month:'2026年10月', type:'新規', company:'医療法人志朋会 やまむら 総合歯科矯正歯科',                     plan:'【BPO】経営分析プラン',                 monthly:850000,  section:'その他'},
+  {month:'2026年10月', type:'新規', company:'アウルデンタルクリニック',                                     plan:'【BPO】経営分析プラン',                 monthly:0,       section:'その他'},
+  {month:'2027年1月',  type:'新規', company:'鶴瀬あおぞら歯科クリニック',                                   plan:'【BPO】経営分析プラン',                 monthly:0,       section:'その他'},
+];
+
+/* ══════════════════════════════════════════════════
+   受注状況 CHART & TABLE RENDER
+══════════════════════════════════════════════════ */
+let leadCI  = null;
+let orderCI = null;
+
+function renderOrders(i) {
+  renderLeadChart();
+  renderLeadTable();
+  renderOrderChart();
+  renderOrderSummaryTable();
+  renderOrdersList(i);
+}
+
+/* ── 新規リード件数チャート ── */
+function renderLeadChart() {
+  if (leadCI) { leadCI.destroy(); leadCI = null; }
+  const canvas = document.getElementById('leadChart');
+  if (!canvas) return;
+
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark'
+    || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const grid = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick = dark ? '#7A8FA8' : '#9CA3AF';
+
+  // Bar = 実績, line = 広告宣伝費（千円）
+  const actData = leadAct.map(v => v === null ? null : v);
+  const adSen = adSpendK.map(v => v === null ? null : Math.round(v / 1000)); // 円÷1000=千円
+
+  leadCI = new Chart(canvas, {
+    data: {
+      labels: SHORT_M,
+      datasets: [
+        {
+          type: 'bar',
+          label: '新規獲得数（実績）',
+          data: actData,
+          backgroundColor: 'rgba(12,167,160,0.75)',
+          borderColor: 'rgba(12,167,160,0.9)',
+          borderWidth: 1,
+          borderRadius: 4,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: '広告宣伝費（千円）',
+          data: adSen,
+          borderColor: 'rgba(99,102,241,0.9)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(99,102,241,0.9)',
+          fill: false,
+          yAxisID: 'yAd',
+          order: 1,
+          tension: 0.3,
+          spanGaps: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { color: tick, font: { size: 11 }, boxWidth: 14, padding: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v === null || v === undefined) return null;
+              if (ctx.dataset.yAxisID === 'yAd') return `${ctx.dataset.label}: ${Math.round(v / 10).toLocaleString('ja-JP')}万円`;
+              return `${ctx.dataset.label}: ${v}件`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: grid }, ticks: { color: tick, font: { size: 11 } } },
+        y: {
+          position: 'left',
+          grid: { color: grid },
+          ticks: { color: tick, font: { size: 11 }, stepSize: 10 },
+          title: { display: true, text: '件数', color: tick, font: { size: 10 } },
+          min: 0,
+        },
+        yAd: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            color: 'rgba(99,102,241,0.8)',
+            font: { size: 11 },
+            stepSize: 500,
+            callback: v => v === 0 ? '0' : `${Math.round(v / 10)}万`
+          },
+          title: { display: true, text: '広告費（万円）', color: 'rgba(99,102,241,0.8)', font: { size: 10 } },
+          min: 0,
+          max: 3000,
+        }
+      }
+    }
+  });
+}
+
+/* ── 新規リード件数サマリーテーブル ── */
+function renderLeadTable() {
+  const tbody = document.getElementById('leadSummaryBody');
+  if (!tbody) return;
+  const makeCell = (v, i, isAct) => {
+    if (v === null || v === undefined) {
+      return `<td style="text-align:center;color:var(--c-text-muted)">-</td>`;
+    }
+    const cls = isAct ? '' : 'style="color:var(--c-text-muted)"';
+    return `<td style="text-align:center;font-variant-numeric:tabular-nums" ${cls}>${v}件</td>`;
+  };
+
+  const cumCell = (val, style='') =>
+    `<td style="text-align:center;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(12,167,160,0.06);${style}">${val}</td>`;
+
+  let rows = '';
+  // 実績行
+  const leadActSum = leadAct.reduce((s, v) => s + (v !== null && v !== undefined ? v : 0), 0);
+  rows += `<tr>
+    <td style="font-weight:600">新規リード（実績）</td>
+    ${SHORT_M.map((_, i) => makeCell(leadAct[i], i, true)).join('')}
+    ${cumCell(`${leadActSum}件`, 'color:rgba(12,167,160,1)')}
+  </tr>`;
+  // 広告宣伝費行（千円）
+  const adSum = adSpendK.reduce((s, v) => s + (v !== null && v !== undefined ? Math.round(v/1000) : 0), 0);
+  rows += `<tr style="color:rgba(99,102,241,0.85)">
+    <td>広告宣伝費（千円）</td>
+    ${SHORT_M.map((_, i) => {
+      const v = adSpendK[i];
+      if (v === null || v === undefined) return `<td style="text-align:center;color:var(--c-text-muted)">-</td>`;
+      return `<td style="text-align:center;font-variant-numeric:tabular-nums">${Math.round(v/1000).toLocaleString('ja-JP')}</td>`;
+    }).join('')}
+    ${cumCell(`${adSum.toLocaleString('ja-JP')}千円`, 'color:rgba(99,102,241,0.85)')}
+  </tr>`;
+  tbody.innerHTML = rows;
+}
+
+/* ── 当月総受注金額チャート（積立棒グラフ）── */
+function renderOrderChart() {
+  if (orderCI) { orderCI.destroy(); orderCI = null; }
+  const canvas = document.getElementById('orderChart');
+  if (!canvas) return;
+
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark'
+    || (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const grid = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick = dark ? '#7A8FA8' : '#9CA3AF';
+
+  orderCI = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: SHORT_M,
+      datasets: [
+        {
+          label: 'BPO',
+          data: ordBpo.map(man),
+          backgroundColor: 'rgba(220,75,65,0.78)',
+          borderColor: 'rgba(200,55,45,1)',
+          borderWidth: 1,
+          stack: 'orders',
+        },
+        {
+          label: 'CXB',
+          data: ordCxb.map(man),
+          backgroundColor: 'rgba(12,167,160,0.78)',
+          borderColor: 'rgba(12,167,160,1)',
+          borderWidth: 1,
+          stack: 'orders',
+        },
+        {
+          label: 'その他',
+          data: ordOth.map(man),
+          backgroundColor: 'rgba(74,144,210,0.75)',
+          borderColor: 'rgba(54,120,190,1)',
+          borderWidth: 1,
+          stack: 'orders',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { color: tick, font: { size: 11 }, boxWidth: 14, padding: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v === null || v === undefined || v === 0) return null;
+              return `${ctx.dataset.label}: ${v.toLocaleString('ja-JP')}万円`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { color: grid },
+          ticks: { color: tick, font: { size: 11 } }
+        },
+        y: {
+          stacked: true,
+          position: 'left',
+          grid: { color: grid },
+          ticks: { color: tick, font: { size: 11 } },
+          title: { display: true, text: '万円', color: tick, font: { size: 10 } },
+          min: 0,
+        }
+      }
+    }
+  });
+}
+
+/* ── 受注月次サマリーテーブル（区分別件数）── */
+function renderOrderSummaryTable() {
+  const tbody = document.getElementById('orderSummaryBody');
+  if (!tbody) return;
+
+  const cell = (v, i) => {
+    const style = i < ACTUAL_COUNT ? '' : 'color:var(--c-text-muted)';
+    const txt = v === 0 && i >= ACTUAL_COUNT ? '-' : `${v}件`;
+    return `<td style="text-align:center;font-variant-numeric:tabular-nums;${style}">${txt}</td>`;
+  };
+  const cumCell = (v, color, unit='件') =>
+    `<td style="text-align:center;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(12,167,160,0.06);color:${color}">${v}${unit}</td>`;
+
+  // 件数集計
+  const bpoSum = ordBpoCnt.reduce((s,v) => s+v, 0);
+  const cxbSum = ordCxbCnt.reduce((s,v) => s+v, 0);
+  const othSum = ordOthCnt.reduce((s,v) => s+v, 0);
+  const totArr = ordBpoCnt.map((v,i) => v + ordCxbCnt[i] + ordOthCnt[i]);
+  const totSum = bpoSum + cxbSum + othSum;
+
+  const totCell = (v, i, unit='件') => {
+    const style = i < ACTUAL_COUNT ? 'font-weight:600' : 'font-weight:600;color:var(--c-text-muted)';
+    const txt = v === 0 && i >= ACTUAL_COUNT ? '-' : `${v}${unit}`;
+    return `<td style="text-align:center;font-variant-numeric:tabular-nums;border-top:2px solid var(--c-border);${style}">${txt}</td>`;
+  };
+  const totCumCell = (v, unit='件') =>
+    `<td style="text-align:center;font-variant-numeric:tabular-nums;font-weight:700;background:rgba(12,167,160,0.06);border-top:2px solid var(--c-border)">${v}${unit}</td>`;
+
+  // 金額セル（万円）
+  const amtCell = (v, i, color='') => {
+    const manen = Math.round(v / 10000);
+    const style = i < ACTUAL_COUNT
+      ? `text-align:center;font-variant-numeric:tabular-nums;font-size:10.5px;${color ? 'color:'+color : ''}`
+      : `text-align:center;font-variant-numeric:tabular-nums;font-size:10.5px;color:var(--c-text-muted)`;
+    const txt = v === 0 && i >= ACTUAL_COUNT ? '-' : `${manen}万`;
+    return `<td style="${style}">${txt}</td>`;
+  };
+  const amtCumCell = (arr, color) => {
+    const total = Math.round(arr.reduce((s,v) => s+v, 0) / 10000);
+    return `<td style="text-align:center;font-variant-numeric:tabular-nums;font-weight:600;font-size:10.5px;background:rgba(12,167,160,0.06);color:${color}">${total}万円</td>`;
+  };
+  const amtTotArr = ordBpo.map((v,i) => v + ordCxb[i] + ordOth[i]);
+  const amtTotCum = Math.round(amtTotArr.reduce((s,v) => s+v, 0) / 10000);
+
+  let rows = '';
+  rows += `<tr><td style="font-weight:600;color:rgba(200,55,45,1)">BPO（件）</td>${ordBpoCnt.map((v,i) => cell(v,i)).join('')}${cumCell(bpoSum,'rgba(200,55,45,1)')}</tr>`;
+  rows += `<tr><td style="font-weight:600;color:rgba(12,167,160,1)">CXB（件）</td>${ordCxbCnt.map((v,i) => cell(v,i)).join('')}${cumCell(cxbSum,'rgba(12,167,160,1)')}</tr>`;
+  rows += `<tr><td style="color:rgba(54,120,190,1)">その他（件）</td>${ordOthCnt.map((v,i) => cell(v,i)).join('')}${cumCell(othSum,'rgba(54,120,190,1)')}</tr>`;
+  rows += `<tr><td style="font-weight:700;border-top:2px solid var(--c-border)">合計（件）</td>${totArr.map((v,i) => totCell(v,i)).join('')}${totCumCell(totSum)}</tr>`;
+  rows += `<tr><td style="font-size:11px;color:var(--c-text-secondary)">総受注金額（万円）</td>${amtTotArr.map((v,i) => amtCell(v,i)).join('')}${amtCumCell(amtTotArr,'var(--c-text-primary)')}</tr>`;
+  tbody.innerHTML = rows;
+}
+
+/* ── 受注一覧（選択月フィルター） ── */
+function renderOrdersList(i) {
+  const monthLabel = LONG_M[i];
+  const tbody = document.getElementById('ordersListBody');
+  const titleEl = document.getElementById('ordersListTitle');
+  if (!tbody) return;
+
+  const recs = KOUS_RECORDS.filter(r => r.month === monthLabel);
+  if (titleEl) titleEl.textContent = `受注一覧（${monthLabel}　全 ${recs.length}件）`;
+
+  if (recs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-text-muted);padding:24px">データなし</td></tr>`;
+    return;
+  }
+
+  const secColor = s => {
+    if (s === 'BPO')    return 'color:rgba(200,55,45,1);font-weight:600';
+    if (s === 'CXB')    return 'color:rgba(12,167,160,1);font-weight:600';
+    if (s === 'その他') return 'color:rgba(54,120,190,1);font-weight:600';
+    return 'color:var(--c-text-secondary)';
+  };
+
+  const rows = recs.map(r => {
+    const fmtY = v => v > 0 ? `¥${v.toLocaleString('ja-JP')}` : '-';
+    return `<tr>
+      <td style="white-space:nowrap">${r.month}</td>
+      <td style="text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.company}">${r.company}</td>
+      <td style="${secColor(r.section)};white-space:nowrap">${r.type}</td>
+      <td style="text-align:left;font-size:11px;color:var(--c-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.plan}">${r.plan}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${fmtY(r.monthly)}</td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
 }
 
 /* Ensure Chart.js and DOM are both ready */
