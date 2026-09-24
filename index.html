@@ -966,23 +966,33 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
     <!-- 受注一覧 -->
     <div class="card" style="margin-top:16px">
       <div class="card-hd">
-        <div class="card-title" id="ordersListTitle">受注一覧</div>
+        <div class="card-title" id="ordersListTitle">今期受注一覧</div>
       </div>
       <div style="overflow-x:auto">
-        <table class="year-table" id="ordersListTable" style="width:100%;table-layout:fixed">
+        <table class="year-table" id="ordersListTable" style="width:100%;table-layout:fixed;min-width:1000px">
           <colgroup>
-            <col style="width:20%">
-            <col style="width:20%">
-            <col style="width:20%">
-            <col style="width:20%">
-            <col style="width:20%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:16%">
+            <col style="width:8%">
+            <col style="width:7%">
+            <col style="width:18%">
+            <col style="width:8%">
+            <col style="width:9%">
+            <col style="width:9%">
+            <col style="width:9%">
           </colgroup>
           <thead><tr>
             <th style="text-align:left">開始月</th>
+            <th style="text-align:left">契約書状況</th>
             <th style="text-align:left">取引先名</th>
+            <th style="text-align:left">商談担当者</th>
             <th style="text-align:left">区分</th>
             <th style="text-align:left">プラン</th>
+            <th style="text-align:left">種別</th>
+            <th style="text-align:right">初期費用</th>
             <th style="text-align:right">月額</th>
+            <th style="text-align:right">契約期間</th>
           </tr></thead>
           <tbody id="ordersListBody"></tbody>
         </table>
@@ -997,7 +1007,7 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
 <!-- ══════════════════════════════════════════════════
      DATA — 第8期 (2026年8月〜2027年7月)
      Source: Google スプレッドシート【8期】売上推移表
-     Last sync: 2026/09/11
+     Last sync: 2026/09/24
 ══════════════════════════════════════════════════ -->
 <script>
 /* ── 月ラベル ── */
@@ -1006,16 +1016,16 @@ const LONG_M  = ['2026年8月','2026年9月','2026年10月','2026年11月','2026
                  '2027年1月','2027年2月','2027年3月','2027年4月','2027年5月','2027年6月','2027年7月'];
 
 /* ── 純売上高 ── */
-const netBdg  = [36415591,34027905,50206423,36769942,38769942,40049942,40204942,40444942,56484942,42124942,42764942,43404942];
-const netAct  = [38088088,35143000,33583000,33783000,34833000,32633000,29138000,27538000,26088000,26088000,25988000,25988000];
+const netBdg  = [38088088,34667098,36150261,47618424,40018424,40978424,40813424,41053424,56693424,42333424,42973424,43613424];
+const netAct  = [38088088,35143000,33583000,33983000,35983000,34083000,30588000,28988000,26538000,26088000,25988000,25988000];
 
 /* ── BPO事業 ── */
-const bpoBdg  = [29935591,28747905,28551423,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942,28354942];
+const bpoBdg  = [31489038,28987098,28695261,28403424,28403424,28403424,28403424,28403424,28403424,28403424,28403424,28403424];
 const bpoAct  = [31489038,27623000,23998000,23998000,24148000,23998000,23953000,23953000,23903000,23903000,23803000,23803000];
 
 /* ── 新規事業 ── */
-const newBdg  = [6480000,5280000,21655000,8415000,10415000,11695000,11850000,12090000,28130000,13770000,14410000,15050000];
-const newAct  = [6870000,7520000,9585000,9785000,10685000,8635000,5185000,3585000,2185000,2185000,2185000,2185000];
+const newBdg  = [6870000,5680000,7455000,19215000,11615000,12575000,12410000,12650000,28290000,13930000,14570000,15210000];
+const newAct  = [6870000,7520000,9585000,9985000,11835000,10085000,6635000,5035000,2635000,2185000,2185000,2185000];
 
 /* ── 月額サービス内訳 ── */
 const bpoMon  = [26168000,24923000,23598000,23598000,23598000,23598000,23553000,23553000,23503000,23503000,23503000,23503000];
@@ -1025,18 +1035,18 @@ const cxbCont  = [240000,240000,240000,240000,240000,240000,240000,240000,240000
 /* ── 単発・有期内訳 ── */
 const bpoUp  = [910000,510000,0,0,0,0,0,0,0,0,0,0];
 const bpoSpt  = [4411038,2190000,400000,400000,550000,400000,400000,400000,400000,400000,300000,300000];
-const cxbPrj  = [900000,3200000,5150000,5450000,6850000,4800000,2200000,1400000,0,0,0,0];
+const cxbPrj  = [900000,3200000,5150000,5650000,8000000,6250000,3650000,2850000,450000,0,0,0];
 const othNew  = [665000,1345000,610000,600000,600000,600000,600000,590000,590000,590000,590000,590000];
 const keiei  = [1380000,1560000,2410000,2320000,1820000,1820000,970000,180000,180000,180000,180000,180000];
 const media  = [2400000,0,0,0,0,0,0,0,0,0,0,0];
 const bkstage  = [1285000,1175000,1175000,1175000,1175000,1175000,1175000,1175000,1175000,1175000,1175000,1175000];
 
 /* ── 売上総利益（予実管理表 69-71行） ── */
-const gpBdg  = [16070668,13682982,21361500,16425019,18425019,19705019,19860019,20100019,26640019,20780019,21420019,22060019];
+const gpBdg  = [22624766,18352175,19835338,22303501,23703501,24663501,24498501,24738501,31378501,26018501,26658501,27298501];
 const gpAct  = [22624766,null,null,null,null,null,null,null,null,null,null,null];
 
 /* ── 営業利益（予実管理表 72-74行） ── */
-const opBdg  = [-1913882,-4271722,3204565,-1563961,411039,1675039,1828102,2065102,8404602,2724102,3356102,3988102];
+const opBdg  = [2597662,-2862519,-1397895,1026916,2721916,3669916,2701728,2938728,9383228,4202728,4834728,5466728];
 const opAct  = [2612080,null,null,null,null,null,null,null,null,null,null,null];
 
 /* ── 新規MRR（MRR 3-4行） ── */
@@ -1057,16 +1067,16 @@ const ACTUAL_COUNT = 3;
 
 /* ── 通期累計（【8期】予実管理表 AE列 実値） ── */
 const AE = {
-  netBdg:  501669394,   // P1000 予算  row52
-  netAct:  368891088,   // P1000 実績  row53
-  gpBdg:   236530318,   // P2000 予算  row69
+  netBdg:  505001263,   // P1000 予算  row52
+  netAct:  375041088,   // P1000 実績  row53
+  gpBdg:   292073788,   // P2000 予算  row69
   gpAct:    22624766,   // P2000 実績  row70
-  opBdg:    19907191,   // P4000 予算  row72
+  opBdg:    35283864,   // P4000 予算  row72
   opAct:     2612080,   // P4000 実績  row73
-  bpoBdg:  342429394,   // BPO小計 予算 row29
+  bpoBdg:  344802213,   // BPO小計 予算 row29
   bpoAct:  298572038,   // BPO小計 実績 row30
-  cxbAct:   32830000,   // CXB合計 実績 (row37+row40+row41)
-  newAct:   70590000,   // 新規小計 実績 row48
+  cxbAct:   38980000,   // CXB合計 実績 (row37+row40+row41)
+  newAct:   76740000,   // 新規小計 実績 row48
 };
 
 /* ── 解約推移データ（【8期】MRRシート） ── */
@@ -2231,53 +2241,74 @@ const ordBpoCnt = [8, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const ordCxbCnt = [1, 4, 6, 2, 5, 1, 0, 0, 0, 0, 0, 0];
 const ordOthCnt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-/* ── 受注一覧（個票）── */
-// SALESシート 個票: BPO(A-F列)・CXB(H-M列)・その他(O-T列) Row19〜
+/* ── プランカテゴリマスタ（BPO=赤 / CXB=水色 / その他=青） ── */
+const PLAN_CATEGORY = {
+  '【BPO】経営分析プラン':               'その他',
+  '【CX】ブートキャンプ(継続支援)':       'CXB',
+  '【CX】ブートキャンプ(本支援)':         'CXB',
+  '【HP制作】専門LP':                    'BPO',
+  '【HP制作】保守管理':                   'BPO',
+  '【RPO】PROプラン':                    'BPO',
+  '【RPO】採用診断':                     'BPO',
+  '【RPO】特別PJ(サブスク型)':           'BPO',
+  '【クリニック管理くん】BPOセットプラン': 'その他',
+  '【メディア】セミナー支援プラン':        'その他',
+  '【メディア】特別PJ(買切)':             'その他',
+  '【学会】パッケージプラン':             'BPO',
+};
+const getPlanCat = r => {
+  const cat = PLAN_CATEGORY[r.plan || ''];
+  if (cat) return cat;
+  // fallback: service名で判断
+  if (r.service === 'CX') return 'CXB';
+  if (['BPO','RPO','HP制作','学会'].includes(r.service)) return 'BPO';
+  return 'その他';
+};
+
+/* ── 受注一覧（受注一覧シートより 8期全件） ── */
 const KOUS_RECORDS = [
-  // ── BPO ──
-  {month:'2026年8月',  type:'既存', company:'こばやし歯科医院',                                             plan:'【BPO】伴走型プラン',                   monthly:150000, section:'BPO'},
-  {month:'2026年8月',  type:'既存', company:'医療法人社団栗林歯科医院',                                     plan:'【HP制作】保守管理',                     monthly:30000,  section:'BPO'},
-  {month:'2026年8月',  type:'既存', company:'若林歯科',                                                     plan:'【HP制作】保守管理',                     monthly:10000,  section:'BPO'},
-  {month:'2026年8月',  type:'既存', company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科',          plan:'【RPO】PROプラン',                       monthly:140000, section:'BPO'},
-  {month:'2026年8月',  type:'既存', company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科',          plan:'【クリニック管理くん】BPOセットプラン', monthly:10000,  section:'BPO'},
-  {month:'2026年8月',  type:'既存', company:'医療法人社団誓栄会 千賀デンタルクリニック',                    plan:'【クリニック管理くん】BPOセットプラン', monthly:50000,  section:'BPO'},
-  {month:'2026年8月',  type:'新規', company:'一般社団法人デンタルＡＩ',                                     plan:'【学会】パッケージプラン',               monthly:100000, section:'BPO'},
-  {month:'2026年8月',  type:'新規', company:'医療法人怜生会 慶歯科医院',                                    plan:'【RPO】採用診断',                        monthly:0,      section:'BPO'},
-  {month:'2026年9月',  type:'既存', company:'KPMGコンサルティング株式会社',                                 plan:'【HP制作】専門LP',                       monthly:0,      section:'BPO'},
-  {month:'2026年9月',  type:'既存', company:'KPMGコンサルティング株式会社',                                 plan:'【HP制作】専門LP',                       monthly:0,      section:'BPO'},
-  {month:'2026年9月',  type:'既存', company:'Well-Being DENTAL CLINIC',                                     plan:'【HP制作】保守管理',                     monthly:10000,  section:'BPO'},
-  {month:'2026年9月',  type:'既存', company:'医療法人怜生会 慶歯科医院',                                    plan:'【RPO】PROプラン',                       monthly:250000, section:'BPO'},
-  {month:'2026年9月',  type:'新規', company:'あかおぎ歯科クリニック',                                       plan:'【RPO】採用診断',                        monthly:0,      section:'BPO'},
-  {month:'2026年10月', type:'新規', company:'THE ROPPONGI CLINIC',                                          plan:'【RPO】PROプラン',                       monthly:150000, section:'BPO'},
-  // ── CXB ──
-  {month:'2026年8月',  type:'既存', company:'芝山デンタルクリニック',                                       plan:'【CX】ブートキャンプ(継続支援)',         monthly:80000,  section:'CXB'},
-  {month:'2026年9月',  type:'既存', company:'清水歯科医院',                                                 plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
-  {month:'2026年9月',  type:'新規', company:'リーフ総合歯科/クローバー歯科/One Dental Clinic星ヶ丘',        plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
-  {month:'2026年9月',  type:'既存', company:'医療法人西山歯科',                                             plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
-  {month:'2026年9月',  type:'新規', company:'医療法人社団新心会',                                           plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
-  {month:'2026年10月', type:'既存', company:'医療法人社団GiFT やぎ歯科医院',                                plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
-  {month:'2026年10月', type:'新規', company:'医療法人社団高松歯科医院',                                     plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
-  {month:'2026年10月', type:'新規', company:'UMEMOTO DENTAL OFFICE',                                        plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
-  {month:'2026年10月', type:'既存', company:'若林歯科',                                                     plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
-  {month:'2026年10月', type:'新規', company:'医療法人築明会 つきやま歯科医院　井尻本院',                    plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
-  {month:'2026年10月', type:'既存', company:'医療法人社団 カワサキ 歯科川崎医院',                           plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
-  {month:'2026年11月', type:'既存', company:'たかす歯科クリニック',                                         plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
-  {month:'2026年11月', type:'既存', company:'リョウジ歯科',                                                 plan:'【CX】ブートキャンプ(本支援)',           monthly:400000, section:'CXB'},
-  {month:'2026年12月', type:'既存', company:'医療法人啓正会 須賀川みらい歯科クリニック',                    plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
-  {month:'2026年12月', type:'既存', company:'医療法人社団同優会 関原デンタルオフィス',                      plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
-  {month:'2026年12月', type:'既存', company:'医療法人こうの歯科',                                           plan:'【CX】ブートキャンプ(本支援)',           monthly:500000, section:'CXB'},
-  {month:'2026年12月', type:'新規', company:'はばたき歯科おとなこども歯科クリニック',                       plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
-  {month:'2026年12月', type:'新規', company:'医療法人祐愛会 西村歯科',                                      plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
-  {month:'2027年1月',  type:'新規', company:'医療法人社団栄昂会 戸塚駅前トリコ歯科',                        plan:'【CX】ブートキャンプ(本支援)',           monthly:450000, section:'CXB'},
-  // ── その他 ──
-  {month:'2026年8月',  type:'既存', company:'デンタルサポート株式会社',                                     plan:'【メディア】セミナー支援プラン',         monthly:1000000, section:'その他'},
-  {month:'2026年8月',  type:'既存', company:'合同会社growing up',                                           plan:'【メディア】特別PJ(買切)',               monthly:1400000, section:'その他'},
-  {month:'2026年9月',  type:'新規', company:'髙屋歯科医院',                                                 plan:'【BPO】経営分析プラン',                 monthly:180000,  section:'その他'},
-  {month:'2026年9月',  type:'既存', company:'加藤総合歯科・矯正歯科',                                       plan:'【BPO】経営分析プラン',                 monthly:790000,  section:'その他'},
-  {month:'2026年9月',  type:'新規', company:'医療法人社団LOVE&TEETH DENTAL TANIZAWA',                       plan:'【BPO】経営分析プラン',                 monthly:0,       section:'その他'},
-  {month:'2026年10月', type:'新規', company:'医療法人志朋会 やまむら 総合歯科矯正歯科',                     plan:'【BPO】経営分析プラン',                 monthly:850000,  section:'その他'},
-  {month:'2026年10月', type:'新規', company:'アウルデンタルクリニック',                                     plan:'【BPO】経営分析プラン',                 monthly:0,       section:'その他'},
-  {month:'2027年1月',  type:'新規', company:'鶴瀬あおぞら歯科クリニック',                                   plan:'【BPO】経営分析プラン',                 monthly:0,       section:'その他'},
+  {start:'2026年8月', status:'未着手', company:'合同会社growing up', sales:'齋藤 篤', service:'メディア', plan:'【メディア】特別PJ(買切)', shubetsu:'買い切り', period:'1ヶ月', init:0, monthly:1400000},
+  {start:'2026年8月', status:'締結済', company:'芝山デンタルクリニック', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(継続支援)', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:80000},
+  {start:'2026年8月', status:'締結済', company:'医療法人社団誓栄会 千賀デンタルクリニック', sales:'杉本 耀太', service:'クリニック管理くん', plan:'【クリニック管理くん】BPOセットプラン', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:50000},
+  {start:'2026年8月', status:'締結済', company:'医療法人社団栗林歯科医院', sales:'', service:'HP制作', plan:'【HP制作】保守管理', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:30000},
+  {start:'2026年8月', status:'送付済', company:'一般社団法人デンタルＡＩ', sales:'', service:'学会', plan:'【学会】パッケージプラン', shubetsu:'買い切り', period:'2ヶ月', init:200000, monthly:100000},
+  {start:'2026年8月', status:'送付済', company:'若林歯科', sales:'杉本 耀太', service:'HP制作', plan:'【HP制作】保守管理', shubetsu:'自動更新', period:'12ヶ月', init:0, monthly:10000},
+  {start:'2026年8月', status:'締結済', company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科', sales:'', service:'クリニック管理くん', plan:'【クリニック管理くん】BPOセットプラン', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:10000},
+  {start:'2026年8月', status:'締結済', company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科', sales:'河本 聖也', service:'RPO', plan:'【RPO】PROプラン', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:140000},
+  {start:'2026年8月', status:'送付済', company:'こばやし歯科医院', sales:'杉本 耀太', service:'BPO', plan:'【BPO】伴走型プラン', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:150000},
+  {start:'2026年8月', status:'締結済', company:'デンタルサポート株式会社', sales:'牧野 光兵', service:'メディア', plan:'【メディア】セミナー支援プラン', shubetsu:'買い切り', period:'1ヶ月', init:0, monthly:1000000},
+  {start:'2026年8月', status:'締結済', company:'医療法人怜生会 慶歯科医院', sales:'河本 聖也', service:'RPO', plan:'【RPO】採用診断', shubetsu:'買い切り', period:'2ヶ月', init:310000, monthly:0},
+  {start:'2026年9月', status:'送付済', company:'髙屋歯科医院', sales:'齋藤 篤', service:'BPO', plan:'【BPO】経営分析プラン', shubetsu:'自動更新', period:'6ヶ月', init:150000, monthly:180000},
+  {start:'2026年9月', status:'締結済', company:'医療法人社団新心会', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:100000, monthly:500000},
+  {start:'2026年9月', status:'未着手', company:'医療法人西山歯科', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:100000, monthly:400000},
+  {start:'2026年9月', status:'締結済', company:'医療法人怜生会 慶歯科医院', sales:'河本 聖也', service:'RPO', plan:'【RPO】PROプラン', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:250000},
+  {start:'2026年9月', status:'送付済', company:'加藤総合歯科・矯正歯科', sales:'齋藤 篤', service:'BPO', plan:'【BPO】経営分析プラン', shubetsu:'買い切り', period:'6ヶ月', init:0, monthly:790000},
+  {start:'2026年9月', status:'締結済', company:'医療法人社団SDC Well-Being DENTAL CLINIC', sales:'', service:'HP制作', plan:'【HP制作】保守管理', shubetsu:'自動更新', period:'12ヶ月', init:0, monthly:10000},
+  {start:'2026年9月', status:'締結済', company:'KPMGコンサルティング株式会社', sales:'杉本 耀太', service:'HP制作', plan:'【HP制作】専門LP', shubetsu:'自動更新', period:'-', init:300000, monthly:0},
+  {start:'2026年9月', status:'締結済', company:'KPMGコンサルティング株式会社', sales:'杉本 耀太', service:'HP制作', plan:'【HP制作】専門LP', shubetsu:'自動更新', period:'-', init:300000, monthly:0},
+  {start:'2026年9月', status:'未着手', company:'医療法人社団誓栄会 千賀デンタルクリニック', sales:'杉本 耀太', service:'RPO', plan:'【RPO】特別PJ(サブスク型)', shubetsu:'自動更新', period:'6ヶ月', init:0, monthly:250000},
+  {start:'2026年9月', status:'締結済', company:'リーフ総合歯科/クローバー歯科/One Dental Clinic星ヶ丘', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:100000, monthly:450000},
+  {start:'2026年9月', status:'送付済', company:'清水歯科医院', sales:'杉本 耀太', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:0, monthly:400000},
+  {start:'2026年9月', status:'締結済', company:'医療法人社団LOVE&TEETH DENTAL TANIZAWA', sales:'杉本 耀太', service:'BPO', plan:'【BPO】経営分析プラン', shubetsu:'買い切り', period:'1ヶ月', init:300000, monthly:0},
+  {start:'2026年9月', status:'締結済', company:'あかおぎ歯科クリニック', sales:'河本 聖也', service:'RPO', plan:'【RPO】採用診断', shubetsu:'買い切り', period:'1ヶ月', init:310000, monthly:0},
+  {start:'2026年10月', status:'担当確認中', company:'医療法人築明会 つきやま歯科医院　井尻本院', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:100000, monthly:450000},
+  {start:'2026年10月', status:'締結済', company:'医療法人社団高松歯科医院', sales:'杉本 耀太', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:0, monthly:400000},
+  {start:'2026年10月', status:'', company:'若林歯科', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:100000, monthly:450000},
+  {start:'2026年10月', status:'締結済', company:'医療法人社団GiFT やぎ歯科医院', sales:'杉本 耀太', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:0, monthly:500000},
+  {start:'2026年10月', status:'送付済', company:'THE ROPPONGI CLINIC', sales:'河本 聖也', service:'RPO', plan:'【RPO】PROプラン', shubetsu:'自動更新', period:'6ヶ月', init:200000, monthly:150000},
+  {start:'2026年10月', status:'締結済', company:'医療法人社団 カワサキ 歯科川崎医院', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:200000, monthly:400000},
+  {start:'2026年10月', status:'締結済', company:'UMEMOTO DENTAL OFFICE', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:50000, monthly:400000},
+  {start:'2026年10月', status:'締結済', company:'医療法人志朋会 やまむら 総合歯科矯正歯科', sales:'齋藤 篤', service:'BPO', plan:'【BPO】経営分析プラン', shubetsu:'買い切り', period:'4ヶ月', init:0, monthly:850000},
+  {start:'2026年10月', status:'送付済', company:'アウルデンタルクリニック', sales:'杉本 耀太', service:'BPO', plan:'【BPO】経営分析プラン', shubetsu:'買い切り', period:'1ヶ月', init:310000, monthly:0},
+  {start:'2026年11月', status:'送付済', company:'リョウジ歯科', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:0, monthly:400000},
+  {start:'2026年11月', status:'', company:'たかす歯科クリニック', sales:'杉本 耀太', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:0, monthly:400000},
+  {start:'2026年12月', status:'', company:'医療法人祐愛会 西村歯科', sales:'杉本 耀太', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:200000, monthly:450000},
+  {start:'2026年12月', status:'担当確認中', company:'医療法人こうの歯科', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:50000, monthly:500000},
+  {start:'2026年12月', status:'', company:'はばたき歯科おとなこども歯科クリニック', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:100000, monthly:450000},
+  {start:'2026年12月', status:'担当確認中', company:'医療法人社団同優会 関原デンタルオフィス', sales:'杉本 耀太', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:300000, monthly:500000},
+  {start:'2026年12月', status:'担当確認中', company:'医療法人啓正会 須賀川みらい歯科クリニック', sales:'河本 聖也', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:200000, monthly:500000},
+  {start:'2027年1月', status:'担当確認中', company:'医療法人社団栄昂会 戸塚駅前トリコ歯科', sales:'齋藤 篤', service:'CX', plan:'【CX】ブートキャンプ(本支援)', shubetsu:'買い切り', period:'4ヶ月', init:100000, monthly:450000},
+  {start:'2027年1月', status:'締結済', company:'鶴瀬あおぞら歯科クリニック', sales:'杉本 耀太', service:'BPO', plan:'【BPO】経営分析プラン', shubetsu:'買い切り', period:'1ヶ月', init:300000, monthly:0},
 ];
 
 /* ══════════════════════════════════════════════════
@@ -2291,7 +2322,7 @@ function renderOrders(i) {
   renderLeadTable();
   renderOrderChart();
   renderOrderSummaryTable();
-  renderOrdersList(i);
+  renderOrdersList();
 }
 
 /* ── 新規リード件数チャート ── */
@@ -2511,6 +2542,27 @@ function renderOrderSummaryTable() {
   const tbody = document.getElementById('orderSummaryBody');
   if (!tbody) return;
 
+  // KOUS_RECORDSから月次集計を動的に生成
+  const FISCAL_START = {year:2026, month:8}; // 8期開始月
+  const toIdx = s => {
+    const m = s.match(/(\d+)年(\d+)月/);
+    if (!m) return -1;
+    return (+m[1] - FISCAL_START.year) * 12 + (+m[2] - FISCAL_START.month);
+  };
+  const isBpo = r => getPlanCat(r) === 'BPO';
+  const isCxb = r => getPlanCat(r) === 'CXB';
+
+  const kBpoCnt = Array(12).fill(0), kCxbCnt = Array(12).fill(0), kOthCnt = Array(12).fill(0);
+  const kBpoAmt = Array(12).fill(0), kCxbAmt = Array(12).fill(0), kOthAmt = Array(12).fill(0);
+  KOUS_RECORDS.forEach(r => {
+    const i = toIdx(r.start);
+    if (i < 0 || i >= 12) return;
+    const amt = (r.init || 0) + (r.monthly || 0);
+    if (isBpo(r))       { kBpoCnt[i]++; kBpoAmt[i] += amt; }
+    else if (isCxb(r))  { kCxbCnt[i]++; kCxbAmt[i] += amt; }
+    else                { kOthCnt[i]++; kOthAmt[i] += amt; }
+  });
+
   const cell = (v, i) => {
     const style = i < ACTUAL_COUNT ? '' : 'color:var(--c-text-muted)';
     const txt = v === 0 && i >= ACTUAL_COUNT ? '-' : `${v}件`;
@@ -2519,11 +2571,10 @@ function renderOrderSummaryTable() {
   const cumCell = (v, color, unit='件') =>
     `<td style="text-align:center;font-variant-numeric:tabular-nums;font-weight:600;background:rgba(12,167,160,0.06);color:${color}">${v}${unit}</td>`;
 
-  // 件数集計
-  const bpoSum = ordBpoCnt.reduce((s,v) => s+v, 0);
-  const cxbSum = ordCxbCnt.reduce((s,v) => s+v, 0);
-  const othSum = ordOthCnt.reduce((s,v) => s+v, 0);
-  const totArr = ordBpoCnt.map((v,i) => v + ordCxbCnt[i] + ordOthCnt[i]);
+  const bpoSum = kBpoCnt.reduce((s,v) => s+v, 0);
+  const cxbSum = kCxbCnt.reduce((s,v) => s+v, 0);
+  const othSum = kOthCnt.reduce((s,v) => s+v, 0);
+  const totArr = kBpoCnt.map((v,i) => v + kCxbCnt[i] + kOthCnt[i]);
   const totSum = bpoSum + cxbSum + othSum;
 
   const totCell = (v, i, unit='件') => {
@@ -2534,7 +2585,6 @@ function renderOrderSummaryTable() {
   const totCumCell = (v, unit='件') =>
     `<td style="text-align:center;font-variant-numeric:tabular-nums;font-weight:700;background:rgba(12,167,160,0.06);border-top:2px solid var(--c-border)">${v}${unit}</td>`;
 
-  // 金額セル（万円）
   const amtCell = (v, i, color='') => {
     const manen = Math.round(v / 10000);
     const style = i < ACTUAL_COUNT
@@ -2547,48 +2597,56 @@ function renderOrderSummaryTable() {
     const total = Math.round(arr.reduce((s,v) => s+v, 0) / 10000);
     return `<td style="text-align:center;font-variant-numeric:tabular-nums;font-weight:600;font-size:10.5px;background:rgba(12,167,160,0.06);color:${color}">${total}万円</td>`;
   };
-  const amtTotArr = ordBpo.map((v,i) => v + ordCxb[i] + ordOth[i]);
-  const amtTotCum = Math.round(amtTotArr.reduce((s,v) => s+v, 0) / 10000);
+  const amtTotArr = kBpoAmt.map((v,i) => v + kCxbAmt[i] + kOthAmt[i]);
 
   let rows = '';
-  rows += `<tr><td style="font-weight:600;color:rgba(200,55,45,1)">BPO（件）</td>${ordBpoCnt.map((v,i) => cell(v,i)).join('')}${cumCell(bpoSum,'rgba(200,55,45,1)')}</tr>`;
-  rows += `<tr><td style="font-weight:600;color:rgba(12,167,160,1)">CXB（件）</td>${ordCxbCnt.map((v,i) => cell(v,i)).join('')}${cumCell(cxbSum,'rgba(12,167,160,1)')}</tr>`;
-  rows += `<tr><td style="font-weight:600;color:rgba(54,120,190,1)">その他（件）</td>${ordOthCnt.map((v,i) => cell(v,i)).join('')}${cumCell(othSum,'rgba(54,120,190,1)')}</tr>`;
+  rows += `<tr><td style="font-weight:600;color:rgba(200,55,45,1)">BPO（件）</td>${kBpoCnt.map((v,i) => cell(v,i)).join('')}${cumCell(bpoSum,'rgba(200,55,45,1)')}</tr>`;
+  rows += `<tr><td style="font-weight:600;color:rgba(12,167,160,1)">CXB（件）</td>${kCxbCnt.map((v,i) => cell(v,i)).join('')}${cumCell(cxbSum,'rgba(12,167,160,1)')}</tr>`;
+  rows += `<tr><td style="font-weight:600;color:rgba(54,120,190,1)">その他（件）</td>${kOthCnt.map((v,i) => cell(v,i)).join('')}${cumCell(othSum,'rgba(54,120,190,1)')}</tr>`;
   rows += `<tr><td style="font-weight:700;border-top:2px solid var(--c-border)">合計（件）</td>${totArr.map((v,i) => totCell(v,i)).join('')}${totCumCell(totSum)}</tr>`;
   rows += `<tr><td style="font-size:11px;color:var(--c-text-secondary)">総受注金額（万円）</td>${amtTotArr.map((v,i) => amtCell(v,i)).join('')}${amtCumCell(amtTotArr,'var(--c-text-primary)')}</tr>`;
   tbody.innerHTML = rows;
 }
 
-/* ── 受注一覧（選択月フィルター） ── */
-function renderOrdersList(i) {
-  const monthLabel = LONG_M[i];
+/* ── 今期受注一覧（全件・開始月昇順） ── */
+function renderOrdersList() {
   const tbody = document.getElementById('ordersListBody');
   const titleEl = document.getElementById('ordersListTitle');
   if (!tbody) return;
 
-  const recs = KOUS_RECORDS.filter(r => r.month === monthLabel);
-  if (titleEl) titleEl.textContent = `受注一覧（${monthLabel}　全 ${recs.length}件）`;
+  if (titleEl) titleEl.textContent = `今期受注一覧（全 ${KOUS_RECORDS.length}件）`;
 
-  if (recs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-text-muted);padding:24px">データなし</td></tr>`;
-    return;
-  }
+  const planColor = (svc, plan) => {
+    const cat = PLAN_CATEGORY[plan] || (svc === 'CX' ? 'CXB' : ['BPO','RPO','HP制作','学会'].includes(svc) ? 'BPO' : 'その他');
+    if (cat === 'CXB')  return 'color:rgba(12,167,160,1);font-weight:600';
+    if (cat === 'BPO')  return 'color:rgba(200,55,45,1);font-weight:600';
+    return 'color:rgba(54,120,190,1);font-weight:600';
+  };
+  const abbr = s => s.replace('クリニック管理くん', 'クリ管');
 
-  const secColor = s => {
-    if (s === 'BPO')    return 'color:rgba(200,55,45,1);font-weight:600';
-    if (s === 'CXB')    return 'color:rgba(12,167,160,1);font-weight:600';
-    if (s === 'その他') return 'color:rgba(54,120,190,1);font-weight:600';
-    return 'color:var(--c-text-secondary)';
+  const statusBadge = s => {
+    if (!s) return '-';
+    const colors = {'締結済':'rgba(12,167,160,0.15);color:rgba(12,167,160,1)', '送付済':'rgba(54,120,190,0.15);color:rgba(54,120,190,1)', '担当確認中':'rgba(200,140,0,0.15);color:rgba(160,110,0,1)', '未着手':'rgba(150,150,150,0.15);color:rgba(100,100,100,1)'};
+    const c = colors[s] || 'rgba(150,150,150,0.1);color:inherit';
+    return `<span style="background:${c.split(';')[0]};${c.split(';')[1]};border-radius:3px;padding:1px 5px;font-size:10px;white-space:nowrap">${s}</span>`;
   };
 
-  const rows = recs.map(r => {
+  const parseStart = s => { const m = s.match(/(\d+)年(\d+)月/); return m ? +m[1]*100 + +m[2] : 0; };
+  const sorted = [...KOUS_RECORDS].sort((a,b) => parseStart(a.start) - parseStart(b.start));
+  const rows = sorted.map(r => {
     const fmtY = v => v > 0 ? `¥${v.toLocaleString('ja-JP')}` : '-';
+    const planText = abbr(r.plan || r.service);
     return `<tr>
-      <td style="white-space:nowrap">${r.month}</td>
+      <td style="white-space:nowrap">${r.start}</td>
+      <td style="text-align:left">${statusBadge(r.status)}</td>
       <td style="text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.company}">${r.company}</td>
-      <td style="${secColor(r.section)};white-space:nowrap">${r.type}</td>
-      <td style="text-align:left;font-size:11px;color:var(--c-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.plan}">${r.plan}</td>
+      <td style="text-align:left;white-space:nowrap">${r.sales || '-'}</td>
+      <td style="text-align:left;white-space:nowrap">${(r.service||'-').replace('クリニック管理くん','クリ管')}</td>
+      <td style="${planColor(r.service, r.plan||'')};text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${planText}">${planText}</td>
+      <td style="text-align:left;white-space:nowrap">${r.shubetsu || '-'}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${fmtY(r.init)}</td>
       <td style="text-align:right;font-variant-numeric:tabular-nums">${fmtY(r.monthly)}</td>
+      <td style="text-align:right;white-space:nowrap">${r.period || '-'}</td>
     </tr>`;
   }).join('');
   tbody.innerHTML = rows;
