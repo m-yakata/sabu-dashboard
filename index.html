@@ -2553,7 +2553,7 @@ function renderOrderSummaryTable() {
   let rows = '';
   rows += `<tr><td style="font-weight:600;color:rgba(200,55,45,1)">BPO（件）</td>${ordBpoCnt.map((v,i) => cell(v,i)).join('')}${cumCell(bpoSum,'rgba(200,55,45,1)')}</tr>`;
   rows += `<tr><td style="font-weight:600;color:rgba(12,167,160,1)">CXB（件）</td>${ordCxbCnt.map((v,i) => cell(v,i)).join('')}${cumCell(cxbSum,'rgba(12,167,160,1)')}</tr>`;
-  rows += `<tr><td style="color:rgba(54,120,190,1)">その他（件）</td>${ordOthCnt.map((v,i) => cell(v,i)).join('')}${cumCell(othSum,'rgba(54,120,190,1)')}</tr>`;
+  rows += `<tr><td style="font-weight:600;color:rgba(54,120,190,1)">その他（件）</td>${ordOthCnt.map((v,i) => cell(v,i)).join('')}${cumCell(othSum,'rgba(54,120,190,1)')}</tr>`;
   rows += `<tr><td style="font-weight:700;border-top:2px solid var(--c-border)">合計（件）</td>${totArr.map((v,i) => totCell(v,i)).join('')}${totCumCell(totSum)}</tr>`;
   rows += `<tr><td style="font-size:11px;color:var(--c-text-secondary)">総受注金額（万円）</td>${amtTotArr.map((v,i) => amtCell(v,i)).join('')}${amtCumCell(amtTotArr,'var(--c-text-primary)')}</tr>`;
   tbody.innerHTML = rows;
