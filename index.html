@@ -1005,7 +1005,7 @@ select.ctrl-select:focus { outline: 2px solid var(--c-teal); outline-offset: 1px
 <!-- ══════════════════════════════════════════════════
      DATA — 第8期 (2026年8月〜2027年7月)
      Source: Google スプレッドシート【8期】売上推移表
-     Last sync: 2026/10/02
+     Last sync: 2026/10/05
 ══════════════════════════════════════════════════ -->
 <script>
 /* ── 月ラベル ── */
@@ -1019,7 +1019,7 @@ const netAct  = [38088088,35091803,33163000,33343000,34693000,33893000,30698000,
 
 /* ── BPO事業 ── */
 const bpoBdg  = [31489038,28987098,28695261,28403424,28403424,28403424,28403424,28403424,28403424,28403424,28403424,28403424];
-const bpoAct = [31489038,27952000,23813000,23503000,23653000,23503000,23458000,23458000,23408000,23408000,23308000,23308000]; /* 【8期】予実管理表 30行目 */
+const bpoAct = [31489038,27957040,23813000,23503000,23653000,23503000,23458000,23458000,23408000,23408000,23308000,23308000]; /* 【8期】予実管理表 30行目 */
 
 /* ── 新規事業 ── */
 const newBdg  = [6870000,5680000,7455000,19215000,11615000,12575000,12410000,12650000,28290000,13930000,14570000,15210000];
@@ -1028,7 +1028,7 @@ const newAct = [6870000,7270000,9350000,9840000,11040000,10390000,7240000,564000
 /* ── 月額サービス内訳 ── */
 const bpoMon  = [26168000,24923000,23598000,23598000,23598000,23598000,23553000,23553000,23503000,23503000,23503000,23503000];
 const cliMgmt  = [665000,645000,610000,600000,600000,600000,600000,590000,590000,590000,590000,590000];
-const cxbCont  = [240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000];
+const cxbCont = [240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000,240000];
 
 /* ── 単発・有期内訳 ── */
 const bpoUp  = [910000,510000,0,0,0,0,0,0,0,0,0,0];
@@ -1065,11 +1065,11 @@ const ACTUAL_COUNT = 3;
 
 /* ── 通期累計（【8期】予実管理表 AE列 実値） ── */
 const AE = {
-      netBdg: 505001263, netAct: 371059891,
+      netBdg: 505001263, netAct: 371064931,
       gpBdg:  292073788,  gpAct:  22624766,
       opBdg:  35283871,  opAct:  2612080,
       bpoBdg: 344802213,
-      bpoAct: 294261038, cxbAct: 42030000, newAct: 77200000,
+      bpoAct: 294266078, cxbAct: 42030000, newAct: 77200000,
     };
 
 /* ── 解約推移データ（【8期】MRRシート） ── */
@@ -1715,7 +1715,7 @@ function renderYearTable(selIdx) {
 
   document.getElementById('yearTable').innerHTML = thead + tbody;
   document.getElementById('yearTableTitle').textContent = tableTitleText;
-  document.getElementById('updatedNote').textContent = '※ グラフ・表ともに着地見込ベース　最終更新 2026/10/02 14:21';
+  document.getElementById('updatedNote').textContent = '※ グラフ・表ともに着地見込ベース　最終更新 2026/10/05 00:27';
 }
 
 /* ══════════════════════════════════════════════════
@@ -2214,12 +2214,12 @@ function renderFixedTermTable(i) {
    受注状況 DATA
    Source: KOUS一覧シート（成約 & KO日時 >= 2026-08-01）
           + 【8期】SALES（新規リード・広告宣伝費・受注）
-   Last sync: 2026/10/02
+   Last sync: 2026/10/05
 ══════════════════════════════════════════════════ */
 
 /* ── 新規リード件数 ── */
 // 【8期】SALES Row2: 8月〜7月
-const leadAct = [41,153,17,0,0,0,0,0,0,0,0,0]; /* 【8期】SALES 2行 */
+const leadAct = [41,153,45,0,0,0,0,0,0,0,0,0]; /* 【8期】SALES 2行 */
 
 /* ── 広告宣伝費（円→千円表示）── */
 // 【8期】SALES Row3: 円単位。表示時は÷1000で千円換算
@@ -2261,549 +2261,54 @@ const getPlanCat = r => {
   return 'その他';
 };
 
-/* ── 受注一覧（8期）Last sync: 2026/10/02 ── */
+/* ── 受注一覧（8期）Last sync: 2026/10/05 ── */
     const KOUS_RECORDS = [
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "デンタルサポート株式会社",
-    "sales": "牧野 光兵",
-    "service": "メディア",
-    "plan": "【メディア】セミナー支援プラン",
-    "period": "1.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 1000000
-  },
-  {
-    "start": "2026年8月",
-    "status": "送付済",
-    "company": "こばやし歯科医院",
-    "sales": "杉本 耀太",
-    "service": "BPO",
-    "plan": "【BPO】伴走型プラン",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 150000
-  },
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "医療法人社団幸育会 雑色駅前おとなこども・たけお歯科",
-    "sales": "河本 聖也",
-    "service": "RPO",
-    "plan": "【RPO】PROプラン",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 140000
-  },
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "医療法人社団幸育会 雑色駅前おとなこども・たけお歯科",
-    "sales": "",
-    "service": "クリニック管理くん",
-    "plan": "【クリニック管理くん】BPOセットプラン",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 10000
-  },
-  {
-    "start": "2026年8月",
-    "status": "送付済",
-    "company": "若林歯科",
-    "sales": "杉本 耀太",
-    "service": "HP制作",
-    "plan": "【HP制作】保守管理",
-    "period": "12.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 10000
-  },
-  {
-    "start": "2026年8月",
-    "status": "未着手",
-    "company": "合同会社growing up",
-    "sales": "齋藤 篤",
-    "service": "メディア",
-    "plan": "【メディア】特別PJ(買切)",
-    "period": "1.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 1400000
-  },
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "芝山デンタルクリニック",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(継続支援)",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 80000
-  },
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "医療法人社団誓栄会 千賀デンタルクリニック",
-    "sales": "杉本 耀太",
-    "service": "クリニック管理くん",
-    "plan": "【クリニック管理くん】BPOセットプラン",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 50000
-  },
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "医療法人社団栗林歯科医院",
-    "sales": "",
-    "service": "HP制作",
-    "plan": "【HP制作】保守管理",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 30000
-  },
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "一般社団法人デンタルＡＩ",
-    "sales": "",
-    "service": "学会",
-    "plan": "【学会】パッケージプラン",
-    "period": "2.0",
-    "shubetsu": "買い切り",
-    "init": 200000,
-    "monthly": 100000
-  },
-  {
-    "start": "2026年8月",
-    "status": "締結済",
-    "company": "医療法人怜生会 慶歯科医院",
-    "sales": "河本 聖也",
-    "service": "RPO",
-    "plan": "【RPO】採用診断",
-    "period": "2.0",
-    "shubetsu": "買い切り",
-    "init": 310000,
-    "monthly": 0
-  },
-  {
-    "start": "2026年9月",
-    "status": "送付済",
-    "company": "清水歯科医院",
-    "sales": "杉本 耀太",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 400000
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "リーフ総合歯科/クローバー歯科/One Dental Clinic星ヶ丘",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 450000
-  },
-  {
-    "start": "2026年9月",
-    "status": "送付済",
-    "company": "加藤総合歯科・矯正歯科",
-    "sales": "齋藤 篤",
-    "service": "BPO",
-    "plan": "【BPO】経営分析プラン",
-    "period": "6.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 790000
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "医療法人社団SDC Well-Being DENTAL CLINIC",
-    "sales": "",
-    "service": "HP制作",
-    "plan": "【HP制作】保守管理",
-    "period": "12.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 10000
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "KPMGコンサルティング株式会社",
-    "sales": "杉本 耀太",
-    "service": "HP制作",
-    "plan": "【HP制作】専門LP",
-    "period": "",
-    "shubetsu": "自動更新",
-    "init": 300000,
-    "monthly": 0
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "KPMGコンサルティング株式会社",
-    "sales": "杉本 耀太",
-    "service": "HP制作",
-    "plan": "【HP制作】専門LP",
-    "period": "",
-    "shubetsu": "自動更新",
-    "init": 300000,
-    "monthly": 0
-  },
-  {
-    "start": "2026年9月",
-    "status": "送付済",
-    "company": "医療法人社団誓栄会 千賀デンタルクリニック",
-    "sales": "杉本 耀太",
-    "service": "RPO",
-    "plan": "【RPO】特別PJ(サブスク型)",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 250000
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "医療法人西山歯科",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 400000
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "医療法人社団新心会",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 500000
-  },
-  {
-    "start": "2026年9月",
-    "status": "送付済",
-    "company": "医療法人翔翠会 髙屋歯科医院",
-    "sales": "齋藤 篤",
-    "service": "BPO",
-    "plan": "【BPO】経営分析プラン",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 150000,
-    "monthly": 180000
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "医療法人怜生会 慶歯科医院",
-    "sales": "河本 聖也",
-    "service": "RPO",
-    "plan": "【RPO】PROプラン",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 0,
-    "monthly": 250000
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "医療法人社団LOVE&TEETH DENTAL TANIZAWA",
-    "sales": "杉本 耀太",
-    "service": "BPO",
-    "plan": "【BPO】経営分析プラン",
-    "period": "1.0",
-    "shubetsu": "買い切り",
-    "init": 300000,
-    "monthly": 0
-  },
-  {
-    "start": "2026年9月",
-    "status": "締結済",
-    "company": "あかおぎ歯科クリニック",
-    "sales": "河本 聖也",
-    "service": "RPO",
-    "plan": "【RPO】採用診断",
-    "period": "1.0",
-    "shubetsu": "買い切り",
-    "init": 310000,
-    "monthly": 0
-  },
-  {
-    "start": "2026年10月",
-    "status": "締結済",
-    "company": "医療法人志朋会 やまむら 総合歯科矯正歯科",
-    "sales": "齋藤 篤",
-    "service": "BPO",
-    "plan": "【BPO】経営分析プラン",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 850000
-  },
-  {
-    "start": "2026年10月",
-    "status": "締結済",
-    "company": "UMEMOTO DENTAL OFFICE",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 50000,
-    "monthly": 400000
-  },
-  {
-    "start": "2026年10月",
-    "status": "締結済",
-    "company": "医療法人社団 カワサキ 歯科川崎医院",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 200000,
-    "monthly": 400000
-  },
-  {
-    "start": "2026年10月",
-    "status": "送付済",
-    "company": "THE ROPPONGI CLINIC",
-    "sales": "河本 聖也",
-    "service": "RPO",
-    "plan": "【RPO】PROプラン",
-    "period": "6.0",
-    "shubetsu": "自動更新",
-    "init": 200000,
-    "monthly": 150000
-  },
-  {
-    "start": "2026年10月",
-    "status": "締結済",
-    "company": "医療法人社団GiFT やぎ歯科医院",
-    "sales": "杉本 耀太",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 500000
-  },
-  {
-    "start": "2026年10月",
-    "status": "未着手",
-    "company": "若林歯科",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 450000
-  },
-  {
-    "start": "2026年10月",
-    "status": "締結済",
-    "company": "医療法人社団高松歯科医院",
-    "sales": "杉本 耀太",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 400000
-  },
-  {
-    "start": "2026年10月",
-    "status": "送付済",
-    "company": "医療法人築明会 つきやま歯科医院　井尻本院",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 450000
-  },
-  {
-    "start": "2026年10月",
-    "status": "担当確認中",
-    "company": "医療法人鶴見こどもファミリー歯科",
-    "sales": "河本 聖也",
-    "service": "RPO",
-    "plan": "【RPO】採用診断",
-    "period": "1.0",
-    "shubetsu": "買い切り",
-    "init": 310000,
-    "monthly": 0
-  },
-  {
-    "start": "2026年10月",
-    "status": "送付済",
-    "company": "アウルデンタルクリニック",
-    "sales": "杉本 耀太",
-    "service": "BPO",
-    "plan": "【BPO】経営分析プラン",
-    "period": "1.0",
-    "shubetsu": "買い切り",
-    "init": 310000,
-    "monthly": 0
-  },
-  {
-    "start": "2026年11月",
-    "status": "送付済",
-    "company": "リョウジ歯科",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 400000
-  },
-  {
-    "start": "2026年11月",
-    "status": "送付済",
-    "company": "たかす歯科クリニック",
-    "sales": "杉本 耀太",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 0,
-    "monthly": 400000
-  },
-  {
-    "start": "2026年12月",
-    "status": "締結済",
-    "company": "はばたき歯科おとなこども歯科クリニック",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 450000
-  },
-  {
-    "start": "2026年12月",
-    "status": "担当確認中",
-    "company": "医療法人啓正会 須賀川みらい歯科クリニック",
-    "sales": "河本 聖也",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 200000,
-    "monthly": 500000
-  },
-  {
-    "start": "2026年12月",
-    "status": "担当確認中",
-    "company": "医療法人社団同優会 関原デンタルオフィス",
-    "sales": "杉本 耀太",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 300000,
-    "monthly": 500000
-  },
-  {
-    "start": "2026年12月",
-    "status": "担当確認中",
-    "company": "医療法人祐愛会 西村歯科",
-    "sales": "杉本 耀太",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 200000,
-    "monthly": 450000
-  },
-  {
-    "start": "2027年1月",
-    "status": "送付済",
-    "company": "医療法人こうの歯科",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 50000,
-    "monthly": 500000
-  },
-  {
-    "start": "2027年1月",
-    "status": "送付済",
-    "company": "医療法人社団栄昂会 戸塚駅前トリコ歯科",
-    "sales": "齋藤 篤",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 450000
-  },
-  {
-    "start": "2027年1月",
-    "status": "担当確認中",
-    "company": "医療法人社団 SKE さかえ歯科クリニック",
-    "sales": "杉本 耀太",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 50000,
-    "monthly": 450000
-  },
-  {
-    "start": "2027年1月",
-    "status": "締結済",
-    "company": "鶴瀬あおぞら歯科クリニック",
-    "sales": "杉本 耀太",
-    "service": "BPO",
-    "plan": "【BPO】経営分析プラン",
-    "period": "1.0",
-    "shubetsu": "買い切り",
-    "init": 300000,
-    "monthly": 0
-  },
-  {
-    "start": "2027年2月",
-    "status": "送付済",
-    "company": "ページデンタルクリニック",
-    "sales": "山崎 将一",
-    "service": "CX",
-    "plan": "【CX】ブートキャンプ(本支援)",
-    "period": "4.0",
-    "shubetsu": "買い切り",
-    "init": 100000,
-    "monthly": 400000
-  }
-];
+  {start:'2026年8月',status:'締結済',company:'デンタルサポート株式会社',sales:'牧野 光兵',service:'メディア',plan:'【メディア】セミナー支援プラン',period:'1.0',shubetsu:'買い切り',init:0,monthly:1000000},
+  {start:'2026年8月',status:'送付済',company:'こばやし歯科医院',sales:'杉本 耀太',service:'BPO',plan:'【BPO】伴走型プラン',period:'6.0',shubetsu:'自動更新',init:0,monthly:150000},
+  {start:'2026年8月',status:'締結済',company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科',sales:'河本 聖也',service:'RPO',plan:'【RPO】PROプラン',period:'6.0',shubetsu:'自動更新',init:0,monthly:140000},
+  {start:'2026年8月',status:'締結済',company:'医療法人社団幸育会 雑色駅前おとなこども・たけお歯科',sales:'',service:'クリニック管理くん',plan:'【クリニック管理くん】BPOセットプラン',period:'6.0',shubetsu:'自動更新',init:0,monthly:10000},
+  {start:'2026年8月',status:'送付済',company:'若林歯科',sales:'杉本 耀太',service:'HP制作',plan:'【HP制作】保守管理',period:'12.0',shubetsu:'自動更新',init:0,monthly:10000},
+  {start:'2026年8月',status:'未着手',company:'合同会社growing up',sales:'齋藤 篤',service:'メディア',plan:'【メディア】特別PJ(買切)',period:'1.0',shubetsu:'買い切り',init:0,monthly:1400000},
+  {start:'2026年8月',status:'締結済',company:'芝山デンタルクリニック',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(継続支援)',period:'6.0',shubetsu:'自動更新',init:0,monthly:80000},
+  {start:'2026年8月',status:'締結済',company:'医療法人社団誓栄会 千賀デンタルクリニック',sales:'杉本 耀太',service:'クリニック管理くん',plan:'【クリニック管理くん】BPOセットプラン',period:'6.0',shubetsu:'自動更新',init:0,monthly:50000},
+  {start:'2026年8月',status:'締結済',company:'医療法人社団栗林歯科医院',sales:'',service:'HP制作',plan:'【HP制作】保守管理',period:'6.0',shubetsu:'自動更新',init:0,monthly:30000},
+  {start:'2026年8月',status:'締結済',company:'一般社団法人デンタルＡＩ',sales:'',service:'学会',plan:'【学会】パッケージプラン',period:'2.0',shubetsu:'買い切り',init:200000,monthly:100000},
+  {start:'2026年8月',status:'締結済',company:'医療法人怜生会 慶歯科医院',sales:'河本 聖也',service:'RPO',plan:'【RPO】採用診断',period:'2.0',shubetsu:'買い切り',init:310000,monthly:0},
+  {start:'2026年9月',status:'送付済',company:'清水歯科医院',sales:'杉本 耀太',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:0,monthly:400000},
+  {start:'2026年9月',status:'締結済',company:'リーフ総合歯科/クローバー歯科/One Dental Clinic星ヶ丘',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:450000},
+  {start:'2026年9月',status:'送付済',company:'加藤総合歯科・矯正歯科',sales:'齋藤 篤',service:'BPO',plan:'【BPO】経営分析プラン',period:'6.0',shubetsu:'買い切り',init:0,monthly:790000},
+  {start:'2026年9月',status:'締結済',company:'医療法人社団SDC Well-Being DENTAL CLINIC',sales:'',service:'HP制作',plan:'【HP制作】保守管理',period:'12.0',shubetsu:'自動更新',init:0,monthly:10000},
+  {start:'2026年9月',status:'締結済',company:'KPMGコンサルティング株式会社',sales:'杉本 耀太',service:'HP制作',plan:'【HP制作】専門LP',period:'',shubetsu:'自動更新',init:300000,monthly:0},
+  {start:'2026年9月',status:'締結済',company:'KPMGコンサルティング株式会社',sales:'杉本 耀太',service:'HP制作',plan:'【HP制作】専門LP',period:'',shubetsu:'自動更新',init:300000,monthly:0},
+  {start:'2026年9月',status:'送付済',company:'医療法人社団誓栄会 千賀デンタルクリニック',sales:'杉本 耀太',service:'RPO',plan:'【RPO】特別PJ(サブスク型)',period:'6.0',shubetsu:'自動更新',init:0,monthly:250000},
+  {start:'2026年9月',status:'締結済',company:'医療法人西山歯科',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:400000},
+  {start:'2026年9月',status:'締結済',company:'医療法人社団新心会',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:500000},
+  {start:'2026年9月',status:'送付済',company:'医療法人翔翠会 髙屋歯科医院',sales:'齋藤 篤',service:'BPO',plan:'【BPO】経営分析プラン',period:'6.0',shubetsu:'自動更新',init:150000,monthly:180000},
+  {start:'2026年9月',status:'締結済',company:'医療法人怜生会 慶歯科医院',sales:'河本 聖也',service:'RPO',plan:'【RPO】PROプラン',period:'6.0',shubetsu:'自動更新',init:0,monthly:250000},
+  {start:'2026年9月',status:'締結済',company:'医療法人社団LOVE&TEETH DENTAL TANIZAWA',sales:'杉本 耀太',service:'BPO',plan:'【BPO】経営分析プラン',period:'1.0',shubetsu:'買い切り',init:300000,monthly:0},
+  {start:'2026年9月',status:'締結済',company:'あかおぎ歯科クリニック',sales:'河本 聖也',service:'RPO',plan:'【RPO】採用診断',period:'1.0',shubetsu:'買い切り',init:310000,monthly:0},
+  {start:'2026年10月',status:'締結済',company:'医療法人志朋会 やまむら 総合歯科矯正歯科',sales:'齋藤 篤',service:'BPO',plan:'【BPO】経営分析プラン',period:'4.0',shubetsu:'買い切り',init:0,monthly:850000},
+  {start:'2026年10月',status:'締結済',company:'UMEMOTO DENTAL OFFICE',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:50000,monthly:400000},
+  {start:'2026年10月',status:'締結済',company:'医療法人社団 カワサキ 歯科川崎医院',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:200000,monthly:400000},
+  {start:'2026年10月',status:'送付済',company:'THE ROPPONGI CLINIC',sales:'河本 聖也',service:'RPO',plan:'【RPO】PROプラン',period:'6.0',shubetsu:'自動更新',init:200000,monthly:150000},
+  {start:'2026年10月',status:'締結済',company:'医療法人社団GiFT やぎ歯科医院',sales:'杉本 耀太',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:0,monthly:500000},
+  {start:'2026年10月',status:'未着手',company:'若林歯科',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:450000},
+  {start:'2026年10月',status:'締結済',company:'医療法人社団高松歯科医院',sales:'杉本 耀太',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:0,monthly:400000},
+  {start:'2026年10月',status:'送付済',company:'医療法人築明会 つきやま歯科医院　井尻本院',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:450000},
+  {start:'2026年10月',status:'担当確認中',company:'医療法人鶴見こどもファミリー歯科',sales:'河本 聖也',service:'RPO',plan:'【RPO】採用診断',period:'1.0',shubetsu:'買い切り',init:310000,monthly:0},
+  {start:'2026年10月',status:'送付済',company:'アウルデンタルクリニック',sales:'杉本 耀太',service:'BPO',plan:'【BPO】経営分析プラン',period:'1.0',shubetsu:'買い切り',init:310000,monthly:0},
+  {start:'2026年11月',status:'送付済',company:'リョウジ歯科',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:0,monthly:400000},
+  {start:'2026年11月',status:'送付済',company:'たかす歯科クリニック',sales:'杉本 耀太',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:0,monthly:400000},
+  {start:'2026年12月',status:'締結済',company:'はばたき歯科おとなこども歯科クリニック',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:450000},
+  {start:'2026年12月',status:'担当確認中',company:'医療法人啓正会 須賀川みらい歯科クリニック',sales:'河本 聖也',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:200000,monthly:500000},
+  {start:'2026年12月',status:'担当確認中',company:'医療法人社団同優会 関原デンタルオフィス',sales:'杉本 耀太',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:300000,monthly:500000},
+  {start:'2026年12月',status:'担当確認中',company:'医療法人祐愛会 西村歯科',sales:'杉本 耀太',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:200000,monthly:450000},
+  {start:'2027年1月',status:'送付済',company:'医療法人こうの歯科',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:50000,monthly:500000},
+  {start:'2027年1月',status:'送付済',company:'医療法人社団栄昂会 戸塚駅前トリコ歯科',sales:'齋藤 篤',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:450000},
+  {start:'2027年1月',status:'担当確認中',company:'医療法人社団 SKE さかえ歯科クリニック',sales:'杉本 耀太',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:50000,monthly:450000},
+  {start:'2027年1月',status:'締結済',company:'鶴瀬あおぞら歯科クリニック',sales:'杉本 耀太',service:'BPO',plan:'【BPO】経営分析プラン',period:'1.0',shubetsu:'買い切り',init:300000,monthly:0},
+  {start:'2027年2月',status:'送付済',company:'ページデンタルクリニック',sales:'山崎 将一',service:'CX',plan:'【CX】ブートキャンプ(本支援)',period:'4.0',shubetsu:'買い切り',init:100000,monthly:400000}
+  ];
 
 /* ══════════════════════════════════════════════════
    受注状況 CHART & TABLE RENDER
